@@ -119,7 +119,7 @@
         function initCandleShakeEvent() {
             if (!state.shakeInitialized) {
                 state.shakeInitialized = true;
-                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
                     DeviceMotionEvent.requestPermission().then(p => { 
                         if(p==='granted') window.addEventListener('devicemotion', handleCandleMotion); 
                     }).catch(console.error);
@@ -127,6 +127,9 @@
                     window.addEventListener('devicemotion', handleCandleMotion);
                 }
             }
+            // ซ่อนปุ่มเปิดระบบเขย่าหลังจากกดแล้ว
+            const btn = document.getElementById('shake-sensor-btn');
+            if (btn) btn.style.display = 'none';
         }
 
         function handleCandleMotion(e) {
@@ -145,13 +148,13 @@
         }
 
         function tapCandle() {
-            initCandleShakeEvent(); // แอบเปิดเซ็นเซอร์ตอนลินจิ้มจอครั้งแรก
+            initCandleShakeEvent(); // แอบเปิดเซ็นเซอร์ตอนจิ้มจอครั้งแรกด้วย (เผื่อไม่ได้กดปุ่ม)
             blowCandles();
         }
 
         function blowCandles() {
             if (state.candleTaps < 24) {
-                // ดับทีละ 2 เล่ม
+                // เขย่า/จิ้ม 1 ครั้ง ดับ 2 เล่ม
                 updateState({ candleTaps: Math.min(state.candleTaps + 2, 24) });
                 if (state.candleTaps >= 24) {
                     window.removeEventListener('devicemotion', handleCandleMotion); 
@@ -289,9 +292,14 @@
                     
                     <h2 class="text-xl font-bold text-pink-600 bg-white/90 backdrop-blur-sm px-6 py-2.5 rounded-full shadow-sm border border-pink-100 z-20 flex items-center gap-2">19 Nov 2026 🎂</h2>
                     
-                    <div class="bg-white/90 backdrop-blur-sm px-8 py-2 rounded-full shadow-sm border border-pink-100 z-20 mt-4 mb-2">
-                        <p class="text-pink-500 font-bold text-lg text-center">อายุ 24 แล้ว!</p>
+                    <div class="bg-white/90 backdrop-blur-sm px-8 py-3 rounded-2xl shadow-sm border border-pink-100 z-20 mt-4 mb-2 text-center w-full max-w-[280px]">
+                        <p class="text-pink-500 font-bold text-lg mb-1">อายุ 24 แล้ว!</p>
+                        <p class="text-pink-400 font-medium text-sm">เขย่าเพื่อเป่าเทียนนะคั้บ 💨</p>
                     </div>
+                    
+                    <button id="shake-sensor-btn" onclick="event.stopPropagation(); initCandleShakeEvent()" class="px-6 py-2 bg-pink-500 text-white rounded-full text-sm font-bold shadow-lg hover:bg-pink-600 active:scale-95 transition-all mt-2 animate-bounce z-30">
+                        (กดเพื่อเปิดระบบเป่าเทียน)
+                    </button>
                     
                     <div class="relative mt-2 w-full flex flex-col items-center justify-end z-10">
                         
