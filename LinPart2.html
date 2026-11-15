@@ -66,7 +66,7 @@
             document.body.appendChild(el);
             setTimeout(() => el.remove(), 8000);
         }
-        setInterval(spawnParticle, 600); // สุ่มเกิดทุก 0.6 วิ
+        setInterval(spawnParticle, 600); 
 
         const storyData = [
             { src: 'images/pic1.jpg', caption: 'เจอกันวันแรก!!' }, 
@@ -111,8 +111,32 @@
         let state = { page: 0, storyIndex: 0, loadingProgress: 0, shakeCount: 0, quizIndex: 0, wrongAns: false, countdownText: '3' };
         function updateState(newState) { state = { ...state, ...newState }; renderApp(); }
 
-        // --- Page 0: Untie Ribbon ---
-        function checkRibbon(val) { if (val >= 95) setTimeout(() => updateState({ page: 1 }), 300); }
+        // --- Page 0: Untie Ribbon (พร้อมอนิเมชั่นฝากล่อง) ---
+        function checkRibbon(val) { 
+            const lid = document.getElementById('gift-lid');
+            const bow = document.getElementById('gift-bow');
+            const glow = document.getElementById('gift-glow');
+            
+            if (lid && bow && glow) {
+                // ให้โบว์ค่อยๆ จางและเล็กลงเมื่อเลื่อน 0 -> 40%
+                let bowOpacity = Math.max(1 - (val / 40), 0);
+                let bowScale = Math.max(1 - (val / 40), 0.5);
+                bow.style.opacity = bowOpacity;
+                bow.style.transform = `translateX(-50%) scale(${bowScale})`;
+                
+                // ให้ฝากล่องค่อยๆ แง้มเปิดและมีแสงเรืองแสงเมื่อเลื่อน 40 -> 100%
+                if (val > 40) {
+                    let lift = val - 40; // มีค่า 0 ถึง 60
+                    lid.style.transform = `translateX(-50%) translateY(-${lift * 0.7}px) rotate(-${lift * 0.15}deg)`;
+                    glow.style.opacity = lift / 60;
+                } else {
+                    lid.style.transform = `translateX(-50%) translateY(0) rotate(0deg)`;
+                    glow.style.opacity = 0;
+                }
+            }
+
+            if (val >= 98) setTimeout(() => updateState({ page: 1 }), 300); 
+        }
 
         // --- Page 1: Shake ---
         function initShakeEvent() {
@@ -162,7 +186,6 @@
                 }
             } else {
                 updateState({ wrongAns: true });
-                // สั่นจอเวลาตอบผิด
                 setTimeout(() => updateState({ wrongAns: false }), 400);
             }
         }
@@ -224,12 +247,34 @@
             const app = document.getElementById('app');
             let html = '';
 
-            // 0: ปัดแก้เชือกโบว์
+            // 0: ปัดแก้เชือกโบว์ พร้อมอนิเมชั่นกล่องแง้ม
             if (state.page === 0) {
                 html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-12 animate-fade-up text-center px-8 w-full no-select rounded-3xl m-2 shadow-2xl">
-                    <i data-lucide="gift" class="w-24 h-24 text-pink-500 mb-2 animate-bounce"></i>
-                    <h2 class="text-2xl font-semibold text-pink-600 mb-8 drop-shadow-sm">สไลด์แก้เชือกโบว์ของขวัญกัน! 🎀</h2>
-                    <input type="range" min="0" max="100" value="0" class="ribbon-slider w-full max-w-sm" oninput="checkRibbon(this.value)">
+                    
+                    <div class="relative w-40 h-40 mx-auto mt-4">
+                        <!-- แสงเรืองแสงตอนเปิด -->
+                        <div id="gift-glow" class="absolute inset-0 bg-pink-400 blur-2xl rounded-full opacity-0 transition-opacity duration-100 pointer-events-none"></div>
+                        
+                        <!-- ตัวกล่อง -->
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-24 bg-pink-500 rounded-xl shadow-lg border-2 border-pink-600 overflow-hidden z-10">
+                            <div class="absolute left-1/2 -translate-x-1/2 w-6 h-full bg-pink-300"></div>
+                        </div>
+                        
+                        <!-- ฝากล่อง -->
+                        <div id="gift-lid" class="absolute bottom-20 left-1/2 -translate-x-1/2 w-36 h-10 bg-pink-400 rounded-lg shadow-md border-2 border-pink-600 z-20 origin-bottom-left transition-transform duration-75">
+                            <div class="absolute left-1/2 -translate-x-1/2 w-6 h-full bg-pink-200"></div>
+                        </div>
+                        
+                        <!-- โบว์ -->
+                        <div id="gift-bow" class="absolute bottom-24 left-1/2 -translate-x-1/2 text-6xl z-30 transition-all duration-75 origin-center">
+                            🎀
+                        </div>
+                    </div>
+
+                    <div class="w-full max-w-sm relative z-40">
+                        <h2 class="text-2xl font-semibold text-pink-600 mb-8 drop-shadow-sm">สไลด์แก้เชือกโบว์ของขวัญกัน! ✨</h2>
+                        <input type="range" min="0" max="100" value="0" class="ribbon-slider w-full" oninput="checkRibbon(this.value)">
+                    </div>
                 </div>`;
             
             // 1: เขย่าเพื่อเปิดกล่อง (มี Progress Bar + Effect)
