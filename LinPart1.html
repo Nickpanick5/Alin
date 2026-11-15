@@ -3,327 +3,434 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Happy Birthday Alin 💖 (Part 1)</title>
+    <title>Happy Birthday Alin 💖 (Part 2)</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: 'Kanit', sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; background-color: #fdf2f8; }
+        body { font-family: 'Kanit', sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; background-color: #050505; color: #333; }
         
         /* --- Super Animations --- */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeUpSmoke { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-15px) scale(1.5); } }
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 70% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes floatHeart { 0% { opacity: 0; transform: translateY(0) scale(0.8) rotate(-10deg); } 20% { opacity: 0.5; } 80% { opacity: 0.3; } 100% { opacity: 0; transform: translateY(-100vh) scale(1.2) rotate(10deg); } }
-        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 15px rgba(244,114,182,0.4); } 50% { box-shadow: 0 0 30px rgba(244,114,182,0.7); transform: scale(1.02); } }
+        @keyframes floatHeart { 0% { opacity: 0; transform: translateY(0) scale(0.8) rotate(-10deg); } 20% { opacity: 0.8; } 80% { opacity: 0.6; } 100% { opacity: 0; transform: translateY(-100vh) scale(1.2) rotate(10deg); } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 15px rgba(236,72,153,0.3); } 50% { box-shadow: 0 0 30px rgba(236,72,153,0.6); transform: scale(1.02); } }
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px) rotate(-6deg);} 75%{transform:translateX(6px) rotate(6deg);} }
         
         .animate-fade-up { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .animate-smoke { animation: fadeUpSmoke 1s ease-out forwards; }
         .animate-pop-in { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .animate-pulse-glow { animation: pulseGlow 2s infinite ease-in-out; }
+        .animate-shake { animation: shake 0.3s infinite; }
         .no-select { user-select: none; -webkit-user-select: none; }
         
-        .bg-gradient-custom { background: radial-gradient(circle at top right, #fce7f3 0%, #fff7ed 50%, #fbcfe8 100%); }
+        .bg-gradient-custom { background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%); }
         .floating-particle { position: fixed; z-index: 0; pointer-events: none; }
 
-        /* --- Scratch Canvas --- */
-        #scratch-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; touch-action: none; border-radius: 1rem; }
-        
-        /* --- Fingerprint Bar --- */
-        .finger-scan-bg { transition: height 0.1s linear; }
-        
-        /* --- Love Slider --- */
-        input[type=range].love-slider { -webkit-appearance: none; width: 100%; background: #fce7f3; height: 16px; border-radius: 20px; border: 2px solid #fbcfe8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
-        input[type=range].love-slider::-webkit-slider-thumb { 
-            -webkit-appearance: none; height: 50px; width: 50px; border-radius: 50%; background: #ec4899; cursor: pointer; margin-top: -18px; box-shadow: 0 4px 15px rgba(236,72,153,0.5); border: 3px solid #fff; 
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'); 
-            background-position: center; background-repeat: no-repeat; transition: transform 0.1s; 
-        }
-        input[type=range].love-slider::-webkit-slider-thumb:active { transform: scale(1.1); }
+        /* --- Story UI --- */
+        .story-container { position: relative; width: 100%; max-width: 420px; height: 85vh; max-height: 850px; background: #111; border-radius: 20px; overflow: hidden; margin: 0 auto; box-shadow: 0 15px 35px -5px rgba(236,72,153,0.3); }
+        .story-image { width: 100%; height: 100%; object-fit: contain; background-color: #000; transition: opacity 0.3s ease; }
+        .story-bars { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 4px; z-index: 20; }
+        .story-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }
+        .story-bar-fill { height: 100%; background: #fff; width: 0%; transition: width 0.1s linear; }
+        .story-bar.active .story-bar-fill { width: 100%; }
+        .story-bar.completed .story-bar-fill { width: 100%; }
+        .story-caption { position: absolute; bottom: 25px; left: 20px; right: 20px; color: white; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 1.15rem; z-index: 20; border: 1px solid rgba(255,255,255,0.1); }
+        .story-nav-left { position: absolute; top: 0; left: 0; width: 40%; height: 100%; z-index: 15; }
+        .story-nav-right { position: absolute; top: 0; right: 0; width: 60%; height: 100%; z-index: 15; }
+
+        /* --- Ribbon Slider --- */
+        input[type=range].ribbon-slider { -webkit-appearance: none; width: 100%; background: #fce7f3; height: 18px; border-radius: 20px; border: 2px solid #fbcfe8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        input[type=range].ribbon-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 56px; width: 56px; border-radius: 50%; background: #ec4899; cursor: pointer; margin-top: -21px; box-shadow: 0 4px 15px rgba(236,72,153,0.5); border: 3px solid #fff; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>'); background-position: center; background-repeat: no-repeat; transition: transform 0.1s; }
+        input[type=range].ribbon-slider::-webkit-slider-thumb:active { transform: scale(1.1); }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-custom flex justify-center items-center overflow-hidden relative text-gray-800">
+<body class="min-h-screen bg-black flex justify-center items-center overflow-hidden relative">
 
     <div id="app" class="w-full h-full flex justify-center items-center min-h-screen relative z-10"></div>
 
     <script>
         // ==========================================
-        // Particle System (พื้นหลังโรแมนติก)
+        // Particle System (หัวใจลอยพื้นหลัง)
         // ==========================================
         function spawnParticle() {
             const el = document.createElement('div');
             el.className = 'floating-particle';
-            const emojis = ['💖', '✨', '💕', '🥰', '🎈'];
+            const emojis = ['💖', '✨', '💕', '🥰', '🌸'];
             el.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
             el.style.left = Math.random() * 100 + 'vw';
             el.style.bottom = '-50px';
             el.style.fontSize = (Math.random() * 15 + 15) + 'px';
-            el.style.opacity = Math.random() * 0.5 + 0.2;
-            el.style.animation = `floatHeart ${Math.random() * 4 + 5}s ease-in forwards`;
+            el.style.opacity = Math.random() * 0.5 + 0.3;
+            el.style.animation = `floatHeart ${Math.random() * 4 + 4}s ease-in forwards`;
             document.body.appendChild(el);
-            setTimeout(() => el.remove(), 9000);
+            setTimeout(() => el.remove(), 8000);
         }
-        setInterval(spawnParticle, 800); 
+        setInterval(spawnParticle, 600); 
 
-        // ==========================================
-        // ตำแหน่งเทียน 24 เล่มบนเค้ก (x, y เป็น % ของกล่องเค้ก)
-        // ==========================================
-        const candlePositions = [
-            // แถวหลัง (7 เล่ม)
-            {x: 20, y: 15}, {x: 30, y: 12}, {x: 40, y: 10}, {x: 50, y: 9}, {x: 60, y: 10}, {x: 70, y: 12}, {x: 80, y: 15},
-            // แถวกลาง (8 เล่ม)
-            {x: 15, y: 35}, {x: 25, y: 30}, {x: 35, y: 27}, {x: 45, y: 25}, {x: 55, y: 25}, {x: 65, y: 27}, {x: 75, y: 30}, {x: 85, y: 35},
-            // แถวหน้า (9 เล่ม)
-            {x: 12, y: 58}, {x: 21, y: 52}, {x: 31, y: 47}, {x: 41, y: 44}, {x: 50, y: 43}, {x: 59, y: 44}, {x: 69, y: 47}, {x: 79, y: 52}, {x: 88, y: 58}
+        const storyData = [
+            { src: 'images/pic1.jpg', caption: 'เจอกันวันแรก!!' }, 
+            { src: 'images/pic2.jpg', caption: 'เด่กกซื้อขนมมาฝากด้วย น่ารักที่สุด 🍰' },
+            { src: 'images/pic3.jpg', caption: 'ซบไหล่หน่อยยย 🥰' },
+            { src: 'images/pic4.jpg', caption: 'ไปดูหนังด้วยกันครั้งแรก 🍿' },
+            { src: 'images/pic5.jpg', caption: 'Cloud 11 ที่ประจำ ;D' },
+            { src: 'images/pic6.jpg', caption: 'วิดีโอคอลคุยกันครั้งแรก เขินสุดๆ 😳' },
+            { src: 'images/pic7.jpg', caption: 'Alin OSK137 😝' },
+            { src: 'images/pic8.jpg', caption: 'เดต 1 month ที่ร้านอาหาร 🍷' },
+            { src: 'images/pic9.jpg', caption: 'แชะๆอีกสักรูป' },
+            { src: 'images/pic10.jpg', caption: 'รูปฟิล์มน่ารักๆ เก็บไว้เป็นความทรงจำ 📸'},
+            { src: 'images/pic11.jpg', caption: 'เด่กไป audit ไกล ก้อยังคถกังง' },
+            { src: 'images/pic12.jpg', caption: 'Heyyy Tea🍷' },
+            { src: 'images/pic13.jpg', caption: 'มาเนียนซบกันซะแล้ว ><' },
+            { src: 'images/pic14.jpg', caption: 'บุกห้องเด่กกก!!' },
+            { src: 'images/pic15.jpg', caption: 'Panick + Alin = Buffet 🥂' },
+            { src: 'images/pic16.jpg', caption: 'มื้อที่สุขที่สุด จากคนที่น่ารักที่สุด' },
+            { src: 'images/pic17.jpg', caption: 'ฝีมือทำอาหารของลิน อร่อยมากก! 🍳' },
+            { src: 'images/pic18.jpg', caption: 'เขาใหญ่ Here we Goooo' },
+            { src: 'images/pic19.jpg', caption: 'ถ่ายรูปหน้ากระจกเท่ๆ คู่กัน 🪞' },
+            { src: 'images/pic20.jpg', caption: 'เด่กสวย mood มากก' },
+            { src: 'images/pic21.jpg', caption: 'ซบไหล่อีกแล้วว น่ารัก 🥺' },
+            { src: 'images/pic22.jpg', caption: 'หมูกระทะเยียวยาทุกสิ่ง บรรยากาศดีสุดๆ 🥓' },
+            { src: 'images/pic23.jpg', caption: 'สายลุยก็มา! ใส่หมวกกันน็อกพร้อม ⛑️' },
+            { src: 'images/pic24.jpg', caption: 'นั่งกระเช้าดูสไลเดอร์สายรุ้ง 🌈' },
+            { src: 'images/pic25.jpg', caption: 'ร้านที่เด่กรอคอย ได้กินแล้วว' },
+            { src: 'images/pic26.jpg', caption: 'หม่ำๆ @ ฟาร์มโชคชัย' },
+            { src: 'images/pic27.jpg', caption: 'คาวเกิร์ลสุดน่ารักก 🤠' }, 
+            { src: 'images/pic28.jpg', caption: 'พามาฟิตเนส ออกกำลังกายด้วยกัน 💪' },
+            { src: 'images/pic29.jpg', caption: 'เด่กซุ่มซ่าม กินเลอะไปหมดแม้กระทั่ง Creatine' },
+            { src: 'images/pic30.jpg', caption: 'ดอกไม้ช่อใหญ่จากเด่กกของพี่ 💐' },
+            { src: 'images/pic31.jpg', caption: 'ความหมายของดอกลิลลี่ 🤍' }
         ];
 
-        let state = { 
-            page: 0, 
-            pin: '', 
-            pinFails: 0, 
-            fingerProgress: 0, 
-            candleTaps: 0, 
-            chatMessages: [], 
-            isScratching: false 
-        };
-        
-        let holdTimer = null;
+        const quizData = [
+            { q: "เราไปเที่ยวเขาใหญ่กันวันที่เท่าไหร่คั้บ? 🌲", opts: ["16-18 Oct 2026", "23-25 Oct 2026", "24-26 Oct 2026", "30 Oct - 1 Nov 2026"], ans: 1 },
+            { q: "เมนูแรกที่ลินทำให้พี่กินคืออะไรเอ่ย? 🍳", opts: ["สเต็กไก่", "สปาเก็ตตี้คาโบนาร่า", "หมูสไลด์ย่าง", "กรีกโยเกิร์ต + องุ่น"], ans: 3 },
+            { q: "แล้วรู้ไหมพี่ชอบอะไรที่สุด? 🥺", opts: ["กอดอลิน", "ร้องเพลง", "สวนกุหลาบ", "ก็อตซิลล่า"], ans: 0 }
+        ];
 
+        let state = { page: 0, storyIndex: 0, loadingProgress: 0, shakeCount: 0, quizIndex: 0, wrongAns: false, countdownText: '3' };
         function updateState(newState) { state = { ...state, ...newState }; renderApp(); }
 
-        // --- Page 0: PIN ---
-        function handlePin(num) {
-            if (state.pin.length < 4) {
-                const newPin = state.pin + num;
-                updateState({ pin: newPin });
-                if (newPin.length === 4) {
-                    setTimeout(() => {
-                        if (newPin === '2808') { 
-                            fireConfetti(60);
-                            setTimeout(() => updateState({ page: 1, pin: '' }), 600);
-                        } else { 
-                            updateState({ pin: '', pinFails: state.pinFails + 1 });
-                            if (state.pinFails < 2) alert('รหัสผิดค้าบ ลองใหม่น้า 😝');
-                        }
-                    }, 300);
-                }
-            }
-        }
-        function deletePin() { updateState({ pin: state.pin.slice(0, -1) }); }
-
-        // --- Page 1: Fingerprint ---
-        function startScan() {
-            let progress = 0;
-            holdTimer = setInterval(() => {
-                progress += 5;
-                updateState({ fingerProgress: progress });
-                if (progress >= 100) {
-                    clearInterval(holdTimer);
-                    setTimeout(() => updateState({ page: 2 }), 500);
-                }
-            }, 100);
-        }
-        function stopScan() { clearInterval(holdTimer); updateState({ fingerProgress: 0 }); }
-
-        // --- Page 2: Candles (24) ---
-        function tapCandle() {
-            if (state.candleTaps < 24) {
-                updateState({ candleTaps: state.candleTaps + 1 });
-                if (state.candleTaps === 24) {
-                    fireConfetti(100);
-                    setTimeout(() => updateState({ page: 3 }), 1200);
-                }
-            }
-        }
-
-        // --- Page 3: Love Slider ---
-        function checkSlider(val) {
-            if (val == 100) {
-                setTimeout(() => { updateState({ page: 4 }); startChat(); }, 500);
-            }
-        }
-
-        // --- Page 4: Chat ---
-        const messages = [
-            "Happy Birthday น้าค้าบเด่กก! 🎉", 
-            "วันนี้ 19 Nov 2026 วันพิเศษของเด่กกทั้งที...", 
-            "พี่มีภารกิจมาให้เล่นด้วยแหละ 😉", 
-            "พร้อมไปเดตกับพี่รึยังง?", 
-            "ถ้าพร้อมแล้ว กดปุ่มข้างล่างเลยคั้บ!"
-        ];
-        function startChat() {
-            let i = 0;
-            const interval = setInterval(() => {
-                if (i < messages.length) {
-                    state.chatMessages.push(messages[i]);
-                    updateState({ chatMessages: state.chatMessages });
-                    i++;
-                } else clearInterval(interval);
-            }, 1200);
-        }
-
-        // --- Page 5: Scratch ---
-        function initScratchCard() {
-            const canvas = document.getElementById('scratch-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
+        // --- Page 0: Untie Ribbon (พร้อมอนิเมชั่นฝากล่อง) ---
+        function checkRibbon(val) { 
+            const lid = document.getElementById('gift-lid');
+            const bow = document.getElementById('gift-bow');
+            const glow = document.getElementById('gift-glow');
             
-            // วาดพื้นหลังบัตรขูดสวยๆ
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#e2e8f0');
-            gradient.addColorStop(0.5, '#cbd5e1');
-            gradient.addColorStop(1, '#94a3b8');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.font = 'bold 20px Kanit'; ctx.fillStyle = '#475569'; ctx.textAlign = 'center';
-            ctx.fillText('ใช้นิ้วถูตรงนี้เพื่อดูว่าไปไหน! ✨', canvas.width/2, canvas.height/2);
-
-            let isDrawing = false; let scratchedPixels = 0;
-            function scratch(e) {
-                if (!isDrawing) return;
-                e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
-                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath(); ctx.arc(x, y, 28, 0, Math.PI * 2); ctx.fill();
-                scratchedPixels++;
-                if (scratchedPixels > 70 && !state.isScratching) {
-                    state.isScratching = true;
-                    canvas.style.transition = 'opacity 0.8s ease-out'; canvas.style.opacity = '0';
-                    fireConfetti(60);
-                    setTimeout(() => { canvas.style.display = 'none'; document.getElementById('next-btn-2').classList.remove('hidden'); }, 800);
+            if (lid && bow && glow) {
+                // ให้โบว์ค่อยๆ จางและเล็กลงเมื่อเลื่อน 0 -> 40%
+                let bowOpacity = Math.max(1 - (val / 40), 0);
+                let bowScale = Math.max(1 - (val / 40), 0.5);
+                bow.style.opacity = bowOpacity;
+                bow.style.transform = `translateX(-50%) scale(${bowScale})`;
+                
+                // ให้ฝากล่องค่อยๆ แง้มเปิดและมีแสงเรืองแสงเมื่อเลื่อน 40 -> 100%
+                if (val > 40) {
+                    let lift = val - 40; // มีค่า 0 ถึง 60
+                    lid.style.transform = `translateX(-50%) translateY(-${lift * 0.7}px) rotate(-${lift * 0.15}deg)`;
+                    glow.style.opacity = lift / 60;
+                } else {
+                    lid.style.transform = `translateX(-50%) translateY(0) rotate(0deg)`;
+                    glow.style.opacity = 0;
                 }
             }
-            canvas.addEventListener('mousedown', () => isDrawing = true); canvas.addEventListener('mouseup', () => isDrawing = false); canvas.addEventListener('mousemove', scratch);
-            canvas.addEventListener('touchstart', () => isDrawing = true, {passive: false}); canvas.addEventListener('touchend', () => isDrawing = false); canvas.addEventListener('touchmove', scratch, {passive: false});
+
+            if (val >= 98) setTimeout(() => updateState({ page: 1 }), 300); 
         }
 
-        function fireConfetti(particles = 50) {
-            confetti({ particleCount: particles, spread: 100, startVelocity: 30, origin: { y: 0.6 }, zIndex: 100 });
+        // --- Page 1: Shake ---
+        function initShakeEvent() {
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission().then(p => { if(p==='granted') window.addEventListener('devicemotion', handleMotion); }).catch(console.error);
+            } else window.addEventListener('devicemotion', handleMotion);
+        }
+        
+        function updateShakeProgress() {
+            const pb = document.getElementById('shake-progress');
+            // เปลี่ยนหลอดให้เต็มที่ 24 ครั้ง
+            if (pb) pb.style.width = Math.min((state.shakeCount / 24) * 100, 100) + '%';
+            if (state.shakeCount >= 24) { 
+                window.removeEventListener('devicemotion', handleMotion); 
+                setTimeout(() => updateState({ page: 2 }), 400); 
+            }
+        }
+        
+        function handleMotion(e) {
+            const acc = e.accelerationIncludingGravity; if (!acc) return;
+            const force = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+            if (force > 15) {
+                state.shakeCount++;
+                const gb = document.getElementById('gift-box'); if (gb) gb.classList.add('animate-shake');
+                updateShakeProgress();
+                setTimeout(() => { if (gb) gb.classList.remove('animate-shake'); }, 300);
+            }
+        }
+        
+        function tapGiftBox() {
+            state.shakeCount++;
+            const gb = document.getElementById('gift-box'); 
+            if (gb) {
+                gb.classList.add('animate-shake');
+                setTimeout(() => gb.classList.remove('animate-shake'), 200);
+            }
+            updateShakeProgress();
+        }
+        function forceOpenGift() { updateState({ page: 2 }); }
+
+        // --- Page 2: Quiz ---
+        function answerQuiz(idx) {
+            if (idx === quizData[state.quizIndex].ans) {
+                if (state.quizIndex < 2) {
+                    updateState({ quizIndex: state.quizIndex + 1, wrongAns: false });
+                } else {
+                    startCountdown(); 
+                }
+            } else {
+                updateState({ wrongAns: true });
+                setTimeout(() => updateState({ wrongAns: false }), 400);
+            }
+        }
+
+        // --- Page 3: Suspense Countdown ---
+        function startCountdown() {
+            updateState({ page: 3, countdownText: '3' });
+            let c = 3;
+            let iv = setInterval(() => {
+                c--;
+                if (c > 0) {
+                    updateState({ countdownText: c.toString() });
+                } else if (c === 0) {
+                    updateState({ countdownText: 'แต่นแต๊นน!' });
+                } else {
+                    clearInterval(iv);
+                    fireConfetti(120);
+                    updateState({ page: 4 });
+                }
+            }, 1000);
+        }
+
+        // --- Page 6: Story ---
+        function nextStory() { 
+            if (state.storyIndex < storyData.length - 1) {
+                updateState({ storyIndex: state.storyIndex + 1 }); 
+            } else { 
+                updateState({ page: 7 }); startLoading(); 
+            } 
+        }
+        function prevStory() { if (state.storyIndex > 0) updateState({ storyIndex: state.storyIndex - 1 }); }
+        
+        // --- Page 7: Loading ---
+        function startLoading() {
+            let p = 0;
+            const iv = setInterval(() => {
+                p += Math.floor(Math.random() * 8) + 4;
+                if (p >= 100) { p = 100; clearInterval(iv); setTimeout(() => updateState({ page: 8 }), 800); }
+                updateState({ loadingProgress: p });
+            }, 250);
+        }
+
+        // --- Page 8: Confession ---
+        function moveNoButton(btn) {
+            const newX = Math.floor(Math.random() * 60) + 10; const newY = Math.floor(Math.random() * 70) + 10;
+            btn.style.position = 'fixed'; btn.style.left = `${newX}vw`; btn.style.top = `${newY}vh`; btn.style.zIndex = '50';
+            btn.style.transition = 'all 0.2s ease-out';
+        }
+
+        function fireConfetti(particles = 80) {
+            var end = Date.now() + 5000;
+            var interval = setInterval(function() {
+                if (Date.now() > end) return clearInterval(interval);
+                confetti({ particleCount: particles, spread: 360, startVelocity: 30, origin: { x: Math.random(), y: Math.random() - 0.2 }, zIndex: 100 });
+            }, 250);
         }
 
         function renderApp() {
             const app = document.getElementById('app');
             let html = '';
-            
-            // ================== PAGE 0: PIN ==================
-            if (state.page === 0) {
-                let dots = ''; for (let i = 0; i < 4; i++) dots += `<div class="w-4 h-4 rounded-full transition-all duration-200 ${i < state.pin.length ? 'bg-pink-500 scale-110 shadow-md' : 'bg-pink-200'}"></div>`;
-                let keypad = ''; for (let i = 1; i <= 9; i++) keypad += `<button onclick="handlePin('${i}')" class="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-100 text-2xl text-pink-600 shadow-sm hover:scale-105 active:scale-95 active:bg-pink-100 transition-all">${i}</button>`;
-                html = `<div class="flex flex-col items-center justify-center w-full max-w-sm px-6 py-10 animate-pop-in no-select bg-white/60 backdrop-blur-lg rounded-3xl shadow-xl border border-white m-4">
-                    <i data-lucide="lock" class="w-12 h-12 text-pink-400 mb-3 drop-shadow-sm"></i>
-                    <h2 class="text-2xl text-pink-600 mb-2 font-bold drop-shadow-sm">ใส่รหัสเพื่อปลดล็อก 🔐</h2>
-                    ${state.pinFails >= 3 ? `<p class="text-sm text-pink-500 mb-4 animate-pulse font-medium bg-pink-100 px-3 py-1 rounded-full">💡 คำใบ้: วันแรกที่เรารู้จักกัน (ววดด)</p>` : `<div class="h-9 mb-4"></div>`}
-                    <div class="flex gap-5 mb-10">${dots}</div>
-                    <div class="grid grid-cols-3 gap-6">
-                        ${keypad} <div></div>
-                        <button onclick="handlePin('0')" class="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-100 text-2xl text-pink-600 shadow-sm hover:scale-105 active:scale-95 active:bg-pink-100 transition-all">0</button>
-                        <button onclick="deletePin()" class="w-16 h-16 rounded-full text-pink-400 flex items-center justify-center hover:scale-105 active:scale-95 active:bg-pink-50 transition-all bg-white/50"><i data-lucide="delete" class="w-8 h-8"></i></button>
-                    </div>
-                </div>`;
-            
-            // ================== PAGE 1: Fingerprint ==================
-            } else if (state.page === 1) {
-                html = `<div class="flex flex-col items-center justify-center space-y-10 animate-pop-in no-select w-full bg-white/60 backdrop-blur-lg rounded-3xl shadow-xl border border-white m-4 p-10 max-w-sm">
-                    <h2 class="text-2xl font-bold text-pink-600 text-center leading-snug drop-shadow-sm">สแกนนิ้วเพื่อยืนยันตัวตน<br>ว่าเป็น "เด่กก" 👆</h2>
-                    <div class="relative w-36 h-36 rounded-full border-4 border-pink-200 overflow-hidden bg-white/80 shadow-inner flex items-center justify-center animate-pulse-glow cursor-pointer"
-                         onmousedown="startScan()" onmouseup="stopScan()" onmouseleave="stopScan()"
-                         ontouchstart="event.preventDefault(); startScan()" ontouchend="stopScan()">
-                        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-pink-400 to-pink-300 finger-scan-bg opacity-70" style="height: ${state.fingerProgress}%"></div>
-                        <i data-lucide="fingerprint" class="w-16 h-16 text-pink-500 relative z-10 ${state.fingerProgress > 0 ? 'animate-pulse scale-110 transition-transform' : 'transition-transform'}"></i>
-                    </div>
-                    <p class="text-pink-500 font-medium bg-pink-100 px-4 py-1.5 rounded-full shadow-sm">แตะค้างไว้ 3 วินาทีนะคั้บ</p>
-                </div>`;
-            
-            // ================== PAGE 2: Candles 24 ==================
-            } else if (state.page === 2) {
-                // สร้างเทียน 24 เล่ม
-                let candlesHtml = candlePositions.map((pos, i) => {
-                    let isLit = i >= state.candleTaps;
-                    return `<div class="absolute transition-all duration-300 ${!isLit ? 'opacity-70' : ''}" style="top: ${pos.y}%; left: ${pos.x}%; transform: translate(-50%, -100%);">
-                        <div class="w-1.5 h-7 bg-gradient-to-b from-pink-100 to-pink-300 rounded-sm relative shadow-sm border border-pink-400/50">
-                            <!-- เปลวไฟ -->
-                            ${isLit ? `<div class="absolute -top-4 -left-[3px] w-3 h-5 bg-gradient-to-b from-yellow-200 to-orange-500 blur-[0.5px] animate-pulse rounded-full" style="border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; box-shadow: 0 0 8px rgba(255,165,0,0.8);"></div>`
-                            : `<div class="absolute -top-1.5 left-[2px] w-[2px] h-1.5 bg-gray-600 rounded-full opacity-60"></div>
-                               <div class="absolute -top-6 -left-1 text-[14px] opacity-0 animate-smoke">💨</div>`}
-                        </div>
-                    </div>`;
-                }).join('');
 
-                html = `<div class="flex flex-col items-center justify-center space-y-6 animate-pop-in no-select w-full h-screen" onclick="tapCandle()" ontouchstart="event.preventDefault(); tapCandle()">
-                    <div class="bg-white/80 backdrop-blur-md px-6 py-2 rounded-full shadow-md border border-pink-100 animate-fade-up">
-                        <h2 class="text-2xl font-bold text-pink-600 drop-shadow-sm">19 Nov 2026 🎂</h2>
-                    </div>
-                    <p class="text-pink-600 font-medium bg-white/60 px-4 py-1.5 rounded-2xl shadow-sm text-center animate-fade-up" style="animation-delay: 0.1s;">อายุ 24 แล้ว!<br>เคาะจอ 24 ครั้งเพื่อเป่าเทียนให้ดับทีละเล่มนะคั้บ 🌬️</p>
+            // 0: ปัดแก้เชือกโบว์ พร้อมอนิเมชั่นกล่องแง้ม
+            if (state.page === 0) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-12 animate-fade-up text-center px-8 w-full no-select rounded-3xl m-2 shadow-2xl">
                     
-                    <div class="relative w-72 h-72 mt-8 flex items-center justify-center drop-shadow-2xl animate-pop-in" style="animation-delay: 0.2s;">
-                        <!-- เค้ก Emoji ใหญ่ๆ -->
-                        <div class="text-[160px] leading-none select-none relative top-8">🎂</div>
-                        <!-- คอนเทนเนอร์ปักเทียน (ครอบคลุมพื้นที่ด้านบนของเค้ก) -->
-                        <div class="absolute top-[10%] left-[10%] w-[80%] h-[50%]">
-                            ${candlesHtml}
-                        </div>
-                    </div>
-                    
-                    <div class="w-64 h-4 bg-pink-200/80 backdrop-blur-sm rounded-full overflow-hidden mt-8 shadow-inner border border-pink-300/50 animate-fade-up" style="animation-delay: 0.3s;">
-                        <div class="h-full bg-gradient-to-r from-orange-300 to-orange-500 transition-all duration-200" style="width: ${(state.candleTaps/24)*100}%"></div>
-                    </div>
-                    <p class="text-sm font-bold text-orange-500 animate-fade-up" style="animation-delay: 0.3s;">${state.candleTaps} / 24</p>
-                </div>`;
-            
-            // ================== PAGE 3: Love Slider ==================
-            } else if (state.page === 3) {
-                html = `<div class="flex flex-col items-center justify-center space-y-12 animate-pop-in w-full px-8 no-select bg-white/60 backdrop-blur-lg rounded-3xl shadow-xl border border-white m-4 py-16 max-w-sm">
-                    <i data-lucide="heart" class="w-20 h-20 text-pink-500 mb-2 animate-pulse" fill="#ec4899"></i>
-                    <h2 class="text-3xl font-bold text-pink-600 drop-shadow-sm text-center">คิดถึงพี่แค่ไหนคั้บ? 🥺</h2>
-                    <div class="w-full relative px-2">
-                        <input type="range" min="0" max="100" value="0" class="love-slider w-full" oninput="checkSlider(this.value)">
-                    </div>
-                    <p class="text-pink-500 font-medium bg-pink-100 px-4 py-1.5 rounded-full shadow-sm text-sm">เลื่อนหัวใจให้สุดหลอดเลยนะ!</p>
-                </div>`;
-            
-            // ================== PAGE 4: Chat ==================
-            } else if (state.page === 4) {
-                let chatHtml = state.chatMessages.map((msg, idx) => `<div class="bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-2xl rounded-tl-none shadow-md text-gray-700 w-fit max-w-[85%] animate-fade-up border border-pink-100 mb-3 font-medium text-[15px]" style="animation-delay: 0.1s;">${msg}</div>`).join('');
-                const btnHtml = state.chatMessages.length === messages.length ? `<button onclick="updateState({page: 5}); setTimeout(initScratchCard, 100);" class="mt-6 px-8 py-3.5 bg-gradient-to-r from-pink-400 to-pink-500 text-white rounded-full text-xl font-bold shadow-lg shadow-pink-300 w-full animate-fade-up active:scale-95 transition-all">ไปดูกันคั้บ! ✨</button>` : '';
-                html = `<div class="flex flex-col w-full max-w-md min-h-[70vh] bg-white/60 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white m-4">
-                    <div class="flex items-center gap-4 mb-6 pb-4 border-b-2 border-pink-100">
-                        <div class="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center shadow-inner"><i data-lucide="user" class="text-pink-600"></i></div>
-                        <div>
-                            <h2 class="font-bold text-pink-700 text-xl">พี่เองงง 💕</h2>
-                            <p class="text-xs text-green-500 font-medium">● Online</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-col flex-1 overflow-y-auto pb-4">${chatHtml}${state.chatMessages.length < messages.length ? `<div class="text-sm text-pink-400 font-medium animate-pulse ml-2 bg-white/50 w-fit px-3 py-1 rounded-full">กำลังพิมพ์...</div>` : ''}</div>
-                    ${btnHtml}
-                </div>`;
-            
-            // ================== PAGE 5: Scratch Card ==================
-            } else if (state.page === 5) {
-                html = `<div class="flex flex-col items-center justify-center space-y-6 animate-pop-in text-center px-4 w-full max-w-lg no-select">
-                    <h2 class="text-3xl font-bold text-pink-600 mb-4 drop-shadow-sm bg-white/60 px-6 py-2 rounded-full backdrop-blur-md">วันเกิดปีนี้ไปไหนดีน้า? 🤫</h2>
-                    
-                    <!-- บัตรขูด -->
-                    <div class="relative w-full max-w-[320px] h-[220px] mx-auto bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border-[3px] border-pink-300 flex flex-col items-center justify-center overflow-hidden animate-pulse-glow">
-                        <div class="text-6xl mb-3 drop-shadow-md">🍣</div>
-                        <h3 class="text-2xl font-bold text-pink-700 leading-tight">Shizen Machi<br>Omakase</h3>
-                        <a href="https://share.google/xeeNcZXXYWj6aRFZG" target="_blank" class="text-pink-500 font-bold mt-3 underline flex items-center gap-1 hover:text-pink-600 transition-colors bg-pink-50 px-3 py-1 rounded-full text-sm shadow-sm"><i data-lucide="map-pin" class="w-4 h-4"></i> เจอกัน 1 ทุ่มนะคั้บ!</a>
+                    <div class="relative w-40 h-40 mx-auto mt-4">
+                        <div id="gift-glow" class="absolute inset-0 bg-pink-400 blur-2xl rounded-full opacity-0 transition-opacity duration-100 pointer-events-none"></div>
                         
-                        <!-- Canvas สำหรับขูดทับอยู่ด้านบน -->
-                        <canvas id="scratch-canvas" width="320" height="220" class="rounded-xl"></canvas>
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-24 bg-pink-500 rounded-xl shadow-lg border-2 border-pink-600 overflow-hidden z-10">
+                            <div class="absolute left-1/2 -translate-x-1/2 w-6 h-full bg-pink-300"></div>
+                        </div>
+                        
+                        <div id="gift-lid" class="absolute bottom-20 left-1/2 -translate-x-1/2 w-36 h-10 bg-pink-400 rounded-lg shadow-md border-2 border-pink-600 z-20 origin-bottom-left transition-transform duration-75">
+                            <div class="absolute left-1/2 -translate-x-1/2 w-6 h-full bg-pink-200"></div>
+                        </div>
+                        
+                        <div id="gift-bow" class="absolute bottom-24 left-1/2 -translate-x-1/2 text-6xl z-30 transition-all duration-75 origin-center">
+                            🎀
+                        </div>
+                    </div>
+
+                    <div class="w-full max-w-sm relative z-40">
+                        <h2 class="text-2xl font-semibold text-pink-600 mb-8 drop-shadow-sm">สไลด์แก้เชือกโบว์ของขวัญกัน! ✨</h2>
+                        <input type="range" min="0" max="100" value="0" class="ribbon-slider w-full" oninput="checkRibbon(this.value)">
+                    </div>
+                </div>`;
+            
+            // 1: เขย่าเพื่อเปิดกล่อง (เขย่า 24 ครั้ง)
+            } else if (state.page === 1) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-6 animate-pop-in text-center px-4 w-full no-select rounded-3xl m-2 shadow-2xl">
+                    <h2 class="text-3xl font-semibold text-pink-600 drop-shadow-sm">แก้โบว์เสร็จแล้ว! 🎁</h2>
+                    <p class="text-lg text-pink-500 mb-2 font-medium">ทีนี้ลอง <span class="font-bold text-pink-600 text-xl">"เขย่ามือถือ"</span> แรงๆ<br>เพื่อแกะกล่องนะคั้บ!</p>
+                    
+                    <div id="gift-box" onclick="tapGiftBox()" class="w-44 h-44 bg-pink-100 rounded-3xl shadow-xl border-4 border-pink-300 flex items-center justify-center relative cursor-pointer transform hover:scale-105 transition duration-300 mt-4 animate-pulse-glow">
+                        <div class="absolute w-full h-6 bg-pink-300 top-1/2 -translate-y-1/2 shadow-sm"></div>
+                        <div class="absolute h-full w-6 bg-pink-300 left-1/2 -translate-x-1/2 shadow-sm"></div>
                     </div>
                     
-                    <div id="next-btn-2" class="hidden mt-8 animate-fade-up w-full max-w-[320px]">
-                        <div class="bg-white/80 backdrop-blur-md p-5 rounded-2xl shadow-lg border border-pink-100">
-                            <p class="text-pink-600 font-bold text-lg mb-2">เจอกันนะคั้บ เตรียมตัวให้พร้อม!</p>
-                            <p class="text-sm text-gray-600 bg-gray-50/80 p-3 rounded-xl border border-gray-200 font-medium">ปล. รอติดตาม Part 2 เร็วๆ นี้นะคั้บ 🎁</p>
+                    <div class="w-64 h-4 bg-pink-200 rounded-full overflow-hidden mt-8 shadow-inner relative border border-pink-300/50">
+                        <div id="shake-progress" class="h-full bg-gradient-to-r from-pink-400 to-pink-600 transition-all duration-300" style="width: ${(state.shakeCount / 24) * 100}%"></div>
+                    </div>
+                    <p class="text-sm text-pink-400 font-medium">เขย่าหรือจิ้มรัวๆ ให้ครบ <span class="font-bold text-pink-600">24 ครั้ง</span> ตามอายุเด่กกเลย! 🎂</p>
+
+                    <button onclick="initShakeEvent()" class="mt-4 px-6 py-2 bg-pink-200/80 text-pink-700 rounded-full text-sm font-medium hover:bg-pink-300 transition">(กดเปิดระบบเซ็นเซอร์เขย่ามือถือ)</button>
+                    <button onclick="forceOpenGift()" class="mt-2 text-sm text-gray-400 underline hover:text-pink-400 transition">ข้ามไปเปิดกล่องเลยคั้บ</button>
+                </div>`;
+            
+            // 2: คำถาม (Quiz) คั่นก่อน
+            } else if (state.page === 2) {
+                const q = quizData[state.quizIndex];
+                let optsHtml = q.opts.map((opt, i) => `<button onclick="answerQuiz(${i})" class="w-full p-4 bg-white/90 backdrop-blur-sm border-2 border-pink-100 rounded-2xl text-gray-700 font-medium shadow-md hover:bg-pink-50 active:bg-pink-200 active:scale-95 transition-all text-left pl-6">${opt}</button>`).join('');
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen px-6 animate-pop-in w-full rounded-3xl m-2 shadow-2xl ${state.wrongAns ? 'animate-shake bg-red-50' : ''}">
+                    <div class="w-full max-w-sm">
+                        <p class="text-pink-500 font-medium mb-4 animate-bounce flex items-center justify-center gap-2"><i data-lucide="alert-circle" class="w-5 h-5"></i> ช้าก่อนนน! ตอบให้ถูกก่อนนะคั้บ 😝</p>
+                        <div class="bg-pink-100 text-pink-600 font-bold px-5 py-1.5 rounded-full w-fit mb-6 text-sm shadow-sm border border-pink-200">คำถามที่ ${state.quizIndex + 1}/3</div>
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-8 leading-snug drop-shadow-sm">${q.q}</h2>
+                        <div class="flex flex-col gap-3">${optsHtml}</div>
+                        ${state.wrongAns ? `<p class="text-red-500 text-center mt-4 font-medium animate-pulse">ผิดค้าบบบ นึกดีๆ! ❌</p>` : `<p class="text-transparent mt-4 font-medium">.</p>`}
+                    </div>
+                </div>`;
+
+            // 3: Suspense Countdown (ลูกเล่นบิ๊วอารมณ์ก่อนเปิดกล่อง)
+            } else if (state.page === 3) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-8 animate-pop-in text-center px-4 w-full no-select rounded-3xl m-2 shadow-2xl">
+                    <h2 class="text-3xl font-semibold text-pink-600 mb-2 drop-shadow-sm">ตอบถูกหมดเลย! เก่งมากคั้บ 👏</h2>
+                    <p class="text-pink-400 font-medium mb-4">กำลังปลดล็อกความลับ...</p>
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-pink-400 blur-2xl opacity-70 rounded-full animate-ping" style="animation-duration: 0.8s;"></div>
+                        <div class="w-44 h-44 bg-pink-100 rounded-3xl shadow-2xl border-4 border-pink-300 flex items-center justify-center relative animate-shake" style="animation-duration: 0.1s;">
+                            <div class="absolute w-full h-6 bg-pink-300 top-1/2 -translate-y-1/2 shadow-sm"></div>
+                            <div class="absolute h-full w-6 bg-pink-300 left-1/2 -translate-x-1/2 shadow-sm"></div>
+                        </div>
+                    </div>
+                    <div class="text-7xl font-bold text-pink-600 drop-shadow-xl transition-transform transform scale-125 mt-10" style="text-shadow: 0 4px 15px rgba(236,72,153,0.4);">${state.countdownText}</div>
+                </div>`;
+
+            // 4: เฉลยของขวัญ (Pop-in ทีละอัน)
+            } else if (state.page === 4) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-6 animate-pop-in text-center px-4 w-full rounded-3xl m-2 shadow-2xl">
+                    <h2 class="text-3xl font-semibold text-pink-600 mb-4 drop-shadow-sm">รับของขวัญไปเลยยย 🎉</h2>
+                    <div class="flex flex-col gap-5 w-full max-w-sm">
+                        <div class="bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-pink-100 flex flex-col items-center animate-fade-up" style="animation-delay: 0.2s; opacity: 0;">
+                            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 shadow-inner"><i data-lucide="monitor-play" class="w-8 h-8 text-blue-500"></i></div>
+                            <h3 class="text-xl font-semibold text-gray-800">Asus ZenScreen</h3>
+                            <p class="text-sm text-gray-500 mt-1">Portable Monitor ไว้ใช้ทำงานนะคั้บ 💻</p>
+                        </div>
+                        <div class="bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-pink-100 flex flex-col items-center animate-fade-up" style="animation-delay: 0.5s; opacity: 0;">
+                            <div class="w-16 h-16 bg-pink-50 rounded-full flex items-center justify-center mb-4 shadow-inner"><i data-lucide="sparkles" class="w-8 h-8 text-pink-500"></i></div>
+                            <h3 class="text-xl font-semibold text-pink-600">Secret Gift 🎁</h3>
+                            <p class="text-sm text-pink-400 mt-1">(เดี๋ยวพี่ให้พร้อมกันนะคั้บ!)</p>
+                        </div>
+                    </div>
+                    <button onclick="updateState({page: 5})" class="mt-8 px-8 py-3 bg-pink-500 text-white rounded-full text-lg font-medium shadow-lg hover:bg-pink-600 active:scale-95 transition-all flex items-center gap-2 animate-fade-up" style="animation-delay: 0.8s; opacity: 0;">
+                        ไปหน้าต่อไปคั้บ <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                </div>`;
+            
+            // 5: หน้า Transition คั่นจังหวะก่อนดูรูป
+            } else if (state.page === 5) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen p-6 animate-pop-in no-select w-full text-center rounded-3xl m-2 shadow-2xl">
+                    <div class="bg-white/90 backdrop-blur-xl p-10 rounded-3xl shadow-2xl w-full max-w-sm border border-pink-200 relative overflow-hidden animate-pulse-glow">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-pink-100 rounded-full blur-3xl opacity-50 -mr-10 -mt-10"></div>
+                        <i data-lucide="camera" class="w-16 h-16 text-pink-500 mx-auto mb-6 relative z-10"></i>
+                        <h2 class="text-3xl font-semibold text-gray-800 mb-6 leading-relaxed relative z-10 drop-shadow-sm">
+                            ลองมองย้อนกลับไป<br>ตั้งแต่วันแรก...
+                        </h2>
+                        <p class="text-pink-500 font-medium mb-10 text-lg relative z-10">เราผ่านอะไรกันมาเยอะเหมือนกันเนาะ 🥺</p>
+                        
+                        <button onclick="updateState({page: 6})" class="w-full px-6 py-4 bg-gradient-to-r from-pink-400 to-pink-500 text-white font-semibold rounded-full text-lg shadow-lg active:scale-95 transition-transform flex justify-center items-center gap-2 relative z-10 hover:shadow-pink-400/50">
+                            ไปดูความทรงจำของเรา ✨
+                        </button>
+                    </div>
+                </div>`;
+
+            // 6: IG Story
+            } else if (state.page === 6) {
+                let barsHtml = storyData.map((_, idx) => `<div class="story-bar ${idx < state.storyIndex ? 'completed' : idx === state.storyIndex ? 'active' : ''}"><div class="story-bar-fill shadow-sm"></div></div>`).join('');
+                const currentImg = storyData[state.storyIndex];
+                html = `<div class="flex flex-col items-center justify-center w-full min-h-screen bg-black animate-fade-in no-select p-2">
+                    <p class="text-pink-50 text-sm font-medium absolute top-6 z-30 drop-shadow-lg bg-white/10 px-5 py-2 rounded-full border border-white/20 backdrop-blur-md shadow-lg">
+                        <i data-lucide="calendar-heart" class="inline w-4 h-4 mr-1 pb-0.5"></i> Since 28 Aug 2026 - 19 Nov 2026
+                    </p>
+                    <div class="story-container w-full h-[85vh]">
+                        <div class="story-bars">${barsHtml}</div>
+                        <img key="${state.storyIndex}" src="${currentImg.src}" class="story-image animate-fade-in" alt="Memory">
+                        <div class="story-caption bg-black/40 p-4 rounded-2xl backdrop-blur-md border border-white/10 m-2">${currentImg.caption}</div>
+                        <div class="story-nav-left" onclick="prevStory()"></div>
+                        <div class="story-nav-right" onclick="nextStory()"></div>
+                    </div>
+                </div>`;
+            
+            // 7: โหลดความรู้สึก
+            } else if (state.page === 7) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen w-full px-8 animate-pop-in text-center rounded-3xl m-2 shadow-2xl">
+                    <i data-lucide="heart-handshake" class="w-20 h-20 text-pink-500 mb-8 animate-pulse drop-shadow-md"></i>
+                    <h2 class="text-2xl font-medium text-pink-600 mb-8">กำลังประมวลผลความรู้สึก...</h2>
+                    <div class="w-full max-w-sm h-5 bg-pink-100 rounded-full overflow-hidden shadow-inner border border-pink-200">
+                        <div class="h-full bg-gradient-to-r from-pink-400 to-pink-600 transition-all duration-300 relative" style="width: ${state.loadingProgress}%">
+                            <div class="absolute top-0 right-0 bottom-0 left-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PC9yZWN0Pgo8cGF0aCBkPSJNMCA4TDIgMEg2TDggOFoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4yIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-50"></div>
+                        </div>
+                    </div>
+                    <p class="mt-5 text-pink-600 font-bold text-xl tracking-wider">${state.loadingProgress}%</p>
+                </div>`;
+            
+            // 8: ขอเป็นแฟน (ปุ่มวิ่งหนี)
+            } else if (state.page === 8) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen p-4 animate-pop-in no-select w-full rounded-3xl m-2 shadow-2xl">
+                    <div class="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center w-full max-w-sm border-2 border-pink-200 animate-pulse-glow">
+                        <p class="text-pink-500 text-sm font-semibold mb-4 bg-pink-100 w-fit mx-auto px-4 py-1 rounded-full shadow-sm">19 Nov 2026 🗓️</p>
+                        <p class="text-lg text-gray-700 leading-relaxed mb-8 font-medium text-left indent-8">
+                            เรารู้จักกันมาจะครบ 3 เดือนแล้วนะพี่ว่าเราทำอะไรด้วยกันมาเยอะมากๆ...
+                        </p>
+                        <h2 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 mb-10 drop-shadow-sm" style="animation: pulse 2s infinite;">เป็นแฟนกับพี่ไหมคั้บ? 🥺</h2>
+                        <div class="flex justify-center gap-4 relative h-16 items-center w-full">
+                            <button onclick="updateState({page: 9}); fireConfetti(150);" class="px-8 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white font-bold rounded-full text-xl shadow-lg shadow-pink-500/40 z-10 hover:scale-105 active:scale-95 transition-all">เป็นแฟน! 💕</button>
+                            <button onmouseover="moveNoButton(this)" ontouchstart="event.preventDefault(); moveNoButton(this)" class="px-6 py-3 bg-gray-300 text-gray-600 font-semibold rounded-full text-lg shadow-md z-10">ไม่เป็น!</button>
+                        </div>
+                    </div>
+                </div>`;
+            
+            // 9: Success และเพิ่ม Day 1
+            } else if (state.page === 9) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen text-center px-4 relative animate-fade-in w-full rounded-3xl m-2 shadow-2xl overflow-hidden">
+                    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIyIiBmaWxsPSIjZWM0ODk5IiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8L3N2Zz4=')] opacity-50 z-0"></div>
+                    
+                    <div class="bg-white/95 backdrop-blur-xl p-10 rounded-[2rem] shadow-2xl z-10 border-4 border-pink-300 max-w-sm relative overflow-hidden animate-pop-in">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-pink-300 rounded-full blur-3xl opacity-30 -mr-20 -mt-20"></div>
+                        <div class="absolute bottom-0 left-0 w-40 h-40 bg-orange-300 rounded-full blur-3xl opacity-30 -ml-20 -mb-20"></div>
+                        
+                        <i data-lucide="heart" class="w-28 h-28 text-pink-500 mx-auto mb-6 animate-pulse drop-shadow-xl" fill="#ec4899"></i>
+                        <h1 class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 mb-4 drop-shadow-sm">เย้! 🎉</h1>
+                        <h2 class="text-3xl font-semibold text-gray-800 mb-2">รักลินนะคั้บ 💕</h2>
+                        <p class="text-pink-500 mt-4 text-xl font-medium">เป็นแฟนกันแล้วน้าาา 🥰</p>
+                        
+                        <!-- ป้ายประทับ Day 1 -->
+                        <div class="mt-10 pt-8 border-t-2 border-dashed border-pink-200 relative z-10">
+                            <span class="inline-block bg-gradient-to-r from-pink-100 to-orange-100 text-pink-600 px-8 py-3 rounded-full font-bold text-xl shadow-md border border-pink-200 animate-pulse-glow">
+                                Day 1 : 19 Nov 2026 🗓️
+                            </span>
                         </div>
                     </div>
                 </div>`;
             }
+
             app.innerHTML = html; lucide.createIcons();
         }
         renderApp();
