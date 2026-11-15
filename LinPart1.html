@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: 'Kanit', sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; background-color: #050505; color: #333; }
+        body { font-family: 'Kanit', sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); color: #333; }
         
         /* --- Super Animations --- */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -21,10 +21,10 @@
         .animate-fade-up { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .animate-pop-in { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .animate-pulse-glow { animation: pulseGlow 2s infinite ease-in-out; }
-        .animate-flame { animation: flameFlicker 0.4s infinite ease-in-out alternate; display: inline-block; origin: bottom center; }
+        .animate-flame { animation: flameFlicker 0.4s infinite ease-in-out alternate; display: inline-block; transform-origin: bottom center; }
         .no-select { user-select: none; -webkit-user-select: none; }
         
-        .bg-gradient-custom { background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%); }
+        .bg-card-custom { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.8); }
         .floating-particle { position: fixed; z-index: 0; pointer-events: none; }
         
         #scratch-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; touch-action: none; }
@@ -42,7 +42,7 @@
         .pin-btn:active { transform: scale(0.9); background-color: #fbcfe8; }
     </style>
 </head>
-<body class="min-h-screen bg-black flex justify-center items-center overflow-hidden relative">
+<body class="min-h-screen flex justify-center items-center overflow-hidden relative">
 
     <div id="app" class="w-full h-full flex justify-center items-center min-h-screen relative z-10"></div>
 
@@ -72,11 +72,13 @@
             fingerProgress: 0, 
             candleTaps: 0, 
             chatMessages: [], 
-            isScratching: false 
+            isScratching: false,
+            shakeInitialized: false
         };
         
         let holdTimer = null;
         let lastShakeTime = 0; 
+        let isChatStarted = false; 
 
         function updateState(newState) { state = { ...state, ...newState }; renderApp(); }
 
@@ -113,17 +115,18 @@
         }
         function stopScan() { clearInterval(holdTimer); updateState({ fingerProgress: 0 }); }
 
-        // --- Page 2: 24 Candles on Cake (Shake to blow) ---
+        // --- Page 2: 24 Candles on Cake (Tap/Shake to blow) ---
         function initCandleShakeEvent() {
-            if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                DeviceMotionEvent.requestPermission().then(p => { 
-                    if(p==='granted') window.addEventListener('devicemotion', handleCandleMotion); 
-                }).catch(console.error);
-            } else {
-                window.addEventListener('devicemotion', handleCandleMotion);
+            if (!state.shakeInitialized) {
+                state.shakeInitialized = true;
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    DeviceMotionEvent.requestPermission().then(p => { 
+                        if(p==='granted') window.addEventListener('devicemotion', handleCandleMotion); 
+                    }).catch(console.error);
+                } else {
+                    window.addEventListener('devicemotion', handleCandleMotion);
+                }
             }
-            const btn = document.getElementById('shake-sensor-btn');
-            if(btn) btn.style.display = 'none';
         }
 
         function handleCandleMotion(e) {
@@ -137,13 +140,18 @@
             
             if (force > 15 && (now - lastShakeTime > 400)) {
                 lastShakeTime = now;
-                tapCandle();
+                blowCandles();
             }
         }
 
         function tapCandle() {
+            initCandleShakeEvent(); // แอบเปิดเซ็นเซอร์ตอนลินจิ้มจอครั้งแรก
+            blowCandles();
+        }
+
+        function blowCandles() {
             if (state.candleTaps < 24) {
-                // เพิ่มทีละ 2 เล่มต่อการเขย่า 1 ครั้ง
+                // ดับทีละ 2 เล่ม
                 updateState({ candleTaps: Math.min(state.candleTaps + 2, 24) });
                 if (state.candleTaps >= 24) {
                     window.removeEventListener('devicemotion', handleCandleMotion); 
@@ -155,7 +163,8 @@
 
         // --- Page 3: Love Slider ---
         function checkSlider(val) {
-            if (val >= 98) {
+            if (val >= 98 && !isChatStarted) {
+                isChatStarted = true;
                 setTimeout(() => { updateState({ page: 4 }); startChat(); }, 400);
             }
         }
@@ -239,7 +248,7 @@
                     keypad += `<button onclick="handlePin('${i}')" class="pin-btn w-16 h-16 rounded-full bg-white/80 backdrop-blur-sm border-2 border-pink-100 text-2xl font-semibold text-pink-600 shadow-sm">${i}</button>`;
                 }
                 
-                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center w-full max-w-sm px-6 py-10 animate-pop-in no-select rounded-3xl m-2 shadow-2xl">
+                html = `<div class="bg-card-custom flex flex-col items-center justify-center w-full max-w-sm px-6 py-10 animate-pop-in no-select rounded-3xl m-2 shadow-2xl">
                     <i data-lucide="lock" class="w-12 h-12 text-pink-400 mb-4 animate-bounce"></i>
                     <h2 class="text-2xl text-pink-600 mb-2 font-semibold drop-shadow-sm">ใส่รหัสเพื่อปลดล็อก 🔐</h2>
                     ${state.pinFails >= 3 ? `<p class="text-sm text-pink-500 mb-4 animate-pulse font-medium bg-pink-100 px-4 py-1 rounded-full">💡 คำใบ้: วันแรกที่เรารู้จักกัน (ววดด)</p>` : `<div class="h-9 mb-4"></div>`}
@@ -254,9 +263,9 @@
             
             // 1: สแกนนิ้ว
             } else if (state.page === 1) {
-                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-10 animate-pop-in no-select w-full rounded-3xl m-2 shadow-2xl px-4">
-                    <h2 class="text-2xl font-semibold text-pink-600 text-center drop-shadow-sm">สแกนนิ้วเพื่อยืนยันตัวตน<br>ว่าเป็น "เด่กก" 👆</h2>
-                    <div class="relative w-36 h-36 rounded-full border-4 border-pink-200 overflow-hidden bg-white/80 backdrop-blur-sm shadow-inner flex items-center justify-center cursor-pointer animate-pulse-glow"
+                html = `<div class="bg-card-custom flex flex-col items-center justify-center min-h-[60vh] py-16 animate-pop-in no-select w-full max-w-sm rounded-3xl m-2 shadow-2xl px-4">
+                    <h2 class="text-2xl font-semibold text-pink-600 text-center drop-shadow-sm mb-10">สแกนนิ้วเพื่อยืนยันตัวตน<br>ว่าเป็น "เด่กก" 👆</h2>
+                    <div class="relative w-36 h-36 rounded-full border-4 border-pink-200 overflow-hidden bg-white/80 backdrop-blur-sm shadow-inner flex items-center justify-center cursor-pointer animate-pulse-glow mb-10"
                          onmousedown="startScan()" onmouseup="stopScan()" onmouseleave="stopScan()"
                          ontouchstart="event.preventDefault(); startScan()" ontouchend="stopScan()">
                         <div class="absolute bottom-0 left-0 w-full bg-pink-400 finger-scan-bg opacity-60" style="height: ${state.fingerProgress}%"></div>
@@ -265,71 +274,71 @@
                     <p class="text-pink-500 font-medium bg-white/50 px-6 py-2 rounded-full shadow-sm">แตะค้างไว้ 3 วินาทีนะคั้บ</p>
                 </div>`;
             
-            // 2: เทียน 24 เล่ม บนเค้ก 3D น่ารักๆ (เป่าด้วยการเขย่า)
+            // 2: เทียน 24 เล่ม บนเค้ก 3D มินิมอล
             } else if (state.page === 2) {
                 let candlesHtml = '';
                 for(let i=0; i<24; i++) {
                     if (i < state.candleTaps) {
-                        candlesHtml += `<div class="text-2xl transition-all duration-500 transform scale-90 opacity-60 drop-shadow-sm flex items-end justify-center">💨</div>`;
+                        candlesHtml += `<div class="text-3xl transition-all duration-500 transform scale-90 opacity-60 drop-shadow-sm flex items-end justify-center">💨</div>`;
                     } else {
-                        candlesHtml += `<div class="text-2xl animate-flame transition-all duration-300 drop-shadow-md">🕯️</div>`;
+                        candlesHtml += `<div class="text-3xl animate-flame transition-all duration-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.8)]">🕯️</div>`;
                     }
                 }
 
-                html = `<div class="bg-gradient-custom flex flex-col items-center justify-start pt-12 min-h-screen space-y-4 animate-pop-in no-select w-full rounded-3xl m-2 shadow-2xl px-4 overflow-hidden">
+                html = `<div class="bg-card-custom flex flex-col items-center justify-start pt-16 pb-8 min-h-[85vh] space-y-4 animate-pop-in no-select w-full max-w-sm rounded-3xl m-2 shadow-2xl px-4 overflow-hidden cursor-pointer" onclick="tapCandle()" ontouchstart="event.preventDefault(); tapCandle()">
                     
-                    <h2 class="text-2xl font-bold text-pink-600 bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full shadow-md border border-pink-200 z-20">19 Nov 2026 🎂</h2>
-                    <p class="text-pink-500 font-medium text-lg text-center mt-2 z-20">
-                        อายุ 24 แล้ว!<br>
-                        <span class="text-sm">เขย่ามือถือ 1 ที เทียนจะดับ 2 เล่มนะคั้บ 💨</span>
-                    </p>
+                    <h2 class="text-xl font-bold text-pink-600 bg-white/90 backdrop-blur-sm px-6 py-2.5 rounded-full shadow-sm border border-pink-100 z-20 flex items-center gap-2">19 Nov 2026 🎂</h2>
                     
-                    <button id="shake-sensor-btn" onclick="initCandleShakeEvent()" class="px-6 py-2 bg-pink-500 text-white rounded-full text-sm font-bold shadow-lg hover:bg-pink-600 active:scale-95 transition-all mt-2 animate-bounce z-20">
-                        (กดเพื่อเปิดระบบเป่าเทียน)
-                    </button>
+                    <div class="bg-white/90 backdrop-blur-sm px-8 py-2 rounded-full shadow-sm border border-pink-100 z-20 mt-4 mb-2">
+                        <p class="text-pink-500 font-bold text-lg text-center">อายุ 24 แล้ว!</p>
+                    </div>
                     
-                    <!-- 🎂 3D Cake Design 🎂 -->
-                    <div class="relative mt-8 w-72 flex flex-col items-center justify-end z-10" onclick="tapCandle()" ontouchstart="event.preventDefault(); tapCandle()">
+                    <div class="relative mt-2 w-full flex flex-col items-center justify-end z-10">
                         
-                        <!-- Candles Grid (24 เล่ม) -->
-                        <div class="grid grid-cols-8 gap-x-2 gap-y-1 z-20 translate-y-3 px-4 w-full justify-items-center">
+                        <!-- เทียน 24 เล่มลอยอยู่ -->
+                        <div class="grid grid-cols-8 gap-x-2 gap-y-3 z-30 px-2 w-full justify-items-center mb-8">
                             ${candlesHtml}
                         </div>
                         
-                        <!-- หน้าเค้ก (Icing) -->
-                        <div class="w-64 h-8 bg-pink-50 rounded-t-3xl shadow-sm z-10 relative"></div>
-                        
-                        <!-- ตัวเค้ก -->
-                        <div class="w-64 h-28 bg-pink-400 rounded-b-[2rem] shadow-xl flex flex-col items-center justify-center border-b-[10px] border-pink-600 relative overflow-hidden">
-                            <!-- ลายหยดย้อย (Drips) -->
-                            <div class="absolute top-0 w-full flex justify-between px-1">
-                                <div class="w-6 h-6 bg-pink-50 rounded-b-full"></div>
-                                <div class="w-8 h-10 bg-pink-50 rounded-b-full"></div>
-                                <div class="w-5 h-5 bg-pink-50 rounded-b-full"></div>
-                                <div class="w-9 h-12 bg-pink-50 rounded-b-full shadow-sm"></div>
-                                <div class="w-6 h-7 bg-pink-50 rounded-b-full"></div>
-                                <div class="w-8 h-9 bg-pink-50 rounded-b-full"></div>
-                                <div class="w-7 h-5 bg-pink-50 rounded-b-full"></div>
+                        <!-- 🎂 เค้ก 3D มินิมอล 🎂 -->
+                        <div class="relative w-48 h-32 flex flex-col items-center z-10">
+                            <!-- เทียน 3 เล่มบนเค้ก -->
+                            <div class="flex gap-4 mb-[-12px] z-30">
+                               <div class="w-3 h-10 bg-white rounded-sm border border-gray-200 relative shadow-sm"><div class="absolute -top-6 -left-1.5 text-2xl animate-flame drop-shadow-[0_0_8px_rgba(252,211,77,0.8)]">🔥</div></div>
+                               <div class="w-3 h-12 bg-white rounded-sm border border-gray-200 relative -translate-y-3 shadow-sm"><div class="absolute -top-6 -left-1.5 text-2xl animate-flame drop-shadow-[0_0_8px_rgba(252,211,77,0.8)]">🔥</div></div>
+                               <div class="w-3 h-10 bg-white rounded-sm border border-gray-200 relative shadow-sm"><div class="absolute -top-6 -left-1.5 text-2xl animate-flame drop-shadow-[0_0_8px_rgba(252,211,77,0.8)]">🔥</div></div>
                             </div>
                             
-                            <!-- ข้อความหน้าเค้ก -->
-                            <span class="text-white font-black text-2xl tracking-widest drop-shadow-md z-10 mt-4 opacity-90">ALIN 24th</span>
+                            <!-- สตรอว์เบอร์รี -->
+                            <div class="absolute top-9 w-44 flex justify-around px-3 z-30">
+                                <div class="w-4 h-5 bg-red-600 rounded-full shadow-md transform -rotate-12"></div>
+                                <div class="w-4 h-5 bg-red-600 rounded-full shadow-md translate-y-2"></div>
+                                <div class="w-4 h-5 bg-red-600 rounded-full shadow-md translate-y-4"></div>
+                                <div class="w-4 h-5 bg-red-600 rounded-full shadow-md translate-y-2"></div>
+                                <div class="w-4 h-5 bg-red-600 rounded-full shadow-md transform rotate-12"></div>
+                            </div>
+                            
+                            <!-- หน้าเค้ก -->
+                            <div class="w-48 h-16 bg-white rounded-[50%] absolute top-5 shadow-inner border border-gray-100 z-20"></div>
+                            
+                            <!-- ตัวเค้ก -->
+                            <div class="w-48 h-20 bg-gradient-to-b from-gray-100 to-gray-300 rounded-b-[50%] absolute top-12 shadow-2xl z-10"></div>
                         </div>
                     </div>
                     
                     <!-- Progress Bar -->
-                    <div class="w-64 h-4 bg-pink-200 rounded-full overflow-hidden mt-10 shadow-inner border border-pink-300/50 relative z-20">
-                        <div class="h-full bg-gradient-to-r from-orange-400 to-pink-500 transition-all duration-300" style="width: ${(state.candleTaps/24)*100}%"></div>
+                    <div class="w-64 h-3 bg-pink-100 rounded-full overflow-hidden mt-12 shadow-inner border border-pink-200/50 relative z-20">
+                        <div class="h-full bg-gradient-to-r from-orange-300 to-orange-500 transition-all duration-300" style="width: ${(state.candleTaps/24)*100}%"></div>
                     </div>
-                    <p class="text-pink-400 font-semibold text-sm mb-4 z-20">${state.candleTaps} / 24</p>
+                    <p class="text-orange-500 font-bold text-sm mb-4 z-20">${state.candleTaps} / 24</p>
                 </div>`;
             
             // 3: หลอดสไลเดอร์ความรัก
             } else if (state.page === 3) {
-                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-12 animate-pop-in w-full px-8 no-select rounded-3xl m-2 shadow-2xl">
-                    <i data-lucide="heart" class="w-20 h-20 text-pink-500 mb-2 animate-pulse drop-shadow-md" fill="#ec4899"></i>
+                html = `<div class="bg-card-custom flex flex-col items-center justify-center min-h-[50vh] py-16 animate-pop-in w-full max-w-sm px-8 no-select rounded-3xl m-2 shadow-2xl">
+                    <i data-lucide="heart" class="w-20 h-20 text-pink-500 mb-6 animate-pulse drop-shadow-md" fill="#ec4899"></i>
                     <h2 class="text-3xl font-bold text-pink-600 drop-shadow-sm text-center">คิดถึงพี่แค่ไหนคั้บ? 🥺</h2>
-                    <div class="w-full max-w-sm mt-8">
+                    <div class="w-full max-w-sm mt-10 mb-8">
                         <input type="range" min="0" max="100" value="0" class="love-slider w-full" oninput="checkSlider(this.value)">
                     </div>
                     <p class="text-pink-500 font-medium bg-white/50 px-6 py-2 rounded-full shadow-sm">เลื่อนให้สุดหลอดเลยนะคั้บ!</p>
@@ -338,14 +347,14 @@
             // 4: แชทเด้ง
             } else if (state.page === 4) {
                 let chatHtml = state.chatMessages.map((msg, idx) => 
-                    `<div class="bg-white px-5 py-3 rounded-2xl rounded-tl-none shadow-md text-gray-700 font-medium w-fit max-w-[85%] animate-fade-up border border-pink-100 mb-4" style="animation-delay: 0.1s;">${msg}</div>`
+                    `<div class="bg-white/90 backdrop-blur-sm px-5 py-3 rounded-2xl rounded-tl-none shadow-md text-gray-700 font-medium w-fit max-w-[85%] animate-fade-up border border-pink-100 mb-4" style="animation-delay: 0.1s;">${msg}</div>`
                 ).join('');
                 
                 const btnHtml = state.chatMessages.length === messages.length 
                     ? `<button onclick="updateState({page: 5}); setTimeout(initScratchCard, 100);" class="mt-8 px-8 py-4 bg-gradient-to-r from-pink-400 to-pink-500 text-white rounded-full text-lg font-bold shadow-lg shadow-pink-500/40 w-full animate-fade-up active:scale-95 transition-transform hover:shadow-pink-400/60">ไปดูกันคั้บ! ✨</button>` 
                     : '';
                 
-                html = `<div class="bg-gradient-custom flex flex-col w-full max-w-md min-h-screen p-6 animate-pop-in shadow-2xl rounded-3xl m-2">
+                html = `<div class="bg-card-custom flex flex-col w-full max-w-md min-h-[75vh] p-6 animate-pop-in shadow-2xl rounded-3xl m-2">
                     <div class="flex items-center gap-4 mb-8 pb-4 border-b-2 border-pink-200/50 bg-white/40 p-4 rounded-2xl backdrop-blur-sm">
                         <div class="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center shadow-inner"><i data-lucide="user" class="text-pink-600 w-7 h-7"></i></div>
                         <div>
@@ -362,8 +371,8 @@
             
             // 5: หน้าขูดหาร้าน
             } else if (state.page === 5) {
-                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-8 animate-pop-in text-center px-4 w-full rounded-3xl m-2 shadow-2xl no-select">
-                    <h2 class="text-3xl font-bold text-pink-600 mb-2 drop-shadow-sm">วันเกิดปีนี้ไปไหนดีน้า? 🤫</h2>
+                html = `<div class="bg-card-custom flex flex-col items-center justify-center min-h-[70vh] py-12 animate-pop-in text-center px-4 w-full max-w-sm rounded-3xl m-2 shadow-2xl no-select">
+                    <h2 class="text-3xl font-bold text-pink-600 mb-6 drop-shadow-sm">วันเกิดปีนี้ไปไหนดีน้า? 🤫</h2>
                     
                     <div class="relative w-full max-w-[320px] h-[220px] mx-auto bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border-4 border-pink-200 flex flex-col items-center justify-center overflow-hidden animate-pulse-glow">
                         <div class="text-6xl mb-3 drop-shadow-md">🍣</div>
