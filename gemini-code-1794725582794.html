@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday Alin 💖 (Part 1)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Kanit', sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+        #scratch-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; touch-action: none; }
+        
+        /* สไตล์หลอดสแกนนิ้ว */
+        .finger-scan-bg { transition: height 0.1s linear; }
+        
+        /* สไลเดอร์ความรัก */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 40px; width: 40px; border-radius: 50%; background: #ec4899; cursor: pointer; margin-top: -16px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; background: #fbcfe8; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-pink-50 via-orange-50 to-pink-100 flex justify-center items-center">
+
+    <div id="app" class="w-full h-full flex justify-center items-center min-h-screen relative"></div>
+
+    <script>
+        let state = { 
+            page: 0, 
+            pin: '', 
+            pinFails: 0, 
+            fingerProgress: 0, 
+            candleTaps: 0, 
+            chatMessages: [], 
+            isScratching: false 
+        };
+        
+        let holdTimer = null;
+
+        function updateState(newState) { state = { ...state, ...newState }; renderApp(); }
+
+        // --- Page 0: PIN ---
+        function handlePin(num) {
+            if (state.pin.length < 4) {
+                const newPin = state.pin + num;
+                updateState({ pin: newPin });
+                if (newPin.length === 4) {
+                    setTimeout(() => {
+                        if (newPin === '2808') { 
+                            updateState({ page: 1, pin: '' }); 
+                        } else { 
+                            updateState({ pin: '', pinFails: state.pinFails + 1 });
+                            if (state.pinFails < 2) alert('รหัสผิดค้าบ ลองใหม่น้า 😝');
+                        }
+                    }, 300);
+                }
+            }
+        }
+        function deletePin() { updateState({ pin: state.pin.slice(0, -1) }); }
+
+        // --- Page 1: Fingerprint ---
+        function startScan() {
+            let progress = 0;
+            holdTimer = setInterval(() => {
+                progress += 5;
+                updateState({ fingerProgress: progress });
+                if (progress >= 100) {
+                    clearInterval(holdTimer);
+                    setTimeout(() => updateState({ page: 2 }), 500);
+                }
+            }, 100);
+        }
+        function stopScan() { clearInterval(holdTimer); updateState({ fingerProgress: 0 }); }
+
+        // --- Page 2: Candles ---
+        function tapCandle() {
+            if (state.candleTaps < 15) {
+                updateState({ candleTaps: state.candleTaps + 1 });
+                if (state.candleTaps >= 14) {
+                    setTimeout(() => updateState({ page: 3 }), 800);
+                }
+            }
+        }
+
+        // --- Page 3: Love Slider ---
+        function checkSlider(val) {
+            if (val == 100) {
+                setTimeout(() => { updateState({ page: 4 }); startChat(); }, 500);
+            }
+        }
+
+        // --- Page 4: Chat ---
+        const messages = ["Happy Birthday น้าค้าบเด่กก! 🎉", "วันนี้ 19 Nov 2026 วันพิเศษของลินทั้งที...", "พี่มีภารกิจมาให้เล่นด้วยแหละ 😉", "พร้อมไปเดตกับพี่รึยังง?", "ถ้าพร้อมแล้ว กดปุ่มข้างล่างเลยคั้บ!"];
+        function startChat() {
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < messages.length) {
+                    state.chatMessages.push(messages[i]);
+                    updateState({ chatMessages: state.chatMessages });
+                    i++;
+                } else clearInterval(interval);
+            }, 1200);
+        }
+
+        // --- Page 5: Scratch ---
+        function initScratchCard() {
+            const canvas = document.getElementById('scratch-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '18px Kanit'; ctx.fillStyle = '#64748b'; ctx.textAlign = 'center';
+            ctx.fillText('ใช้นิ้วถูตรงนี้เพื่อดูว่าวันนี้ไปไหน! 👆', canvas.width/2, canvas.height/2);
+
+            let isDrawing = false; let scratchedPixels = 0;
+            function scratch(e) {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI * 2); ctx.fill();
+                scratchedPixels++;
+                if (scratchedPixels > 80 && !state.isScratching) {
+                    state.isScratching = true;
+                    canvas.style.transition = 'opacity 0.8s'; canvas.style.opacity = '0';
+                    setTimeout(() => { canvas.style.display = 'none'; document.getElementById('next-btn-2').style.display = 'block'; }, 800);
+                }
+            }
+            canvas.addEventListener('mousedown', () => isDrawing = true); canvas.addEventListener('mouseup', () => isDrawing = false); canvas.addEventListener('mousemove', scratch);
+            canvas.addEventListener('touchstart', () => isDrawing = true, {passive: false}); canvas.addEventListener('touchend', () => isDrawing = false); canvas.addEventListener('touchmove', scratch, {passive: false});
+        }
+
+        function renderApp() {
+            const app = document.getElementById('app');
+            let html = '';
+            
+            if (state.page === 0) {
+                let dots = ''; for (let i = 0; i < 4; i++) dots += `<div class="w-4 h-4 rounded-full ${i < state.pin.length ? 'bg-pink-500' : 'border-2 border-pink-300'}"></div>`;
+                let keypad = ''; for (let i = 1; i <= 9; i++) keypad += `<button onclick="handlePin('${i}')" class="w-16 h-16 rounded-full bg-white border border-pink-200 text-2xl text-pink-600 shadow-sm active:bg-pink-100">${i}</button>`;
+                html = `<div class="flex flex-col items-center justify-center w-full max-w-sm px-4 animate-fade-in no-select">
+                    <i data-lucide="lock" class="w-10 h-10 text-pink-400 mb-2"></i>
+                    <h2 class="text-xl text-pink-600 mb-2 font-medium">ใส่รหัสเพื่อปลดล็อก 🔐</h2>
+                    ${state.pinFails >= 3 ? `<p class="text-sm text-pink-500 mb-4 animate-pulse">💡 คำใบ้: วันแรกที่เรารู้จักกัน (ววดด)</p>` : `<div class="h-9 mb-4"></div>`}
+                    <div class="flex gap-4 mb-8">${dots}</div>
+                    <div class="grid grid-cols-3 gap-6">
+                        ${keypad} <div></div>
+                        <button onclick="handlePin('0')" class="w-16 h-16 rounded-full bg-white border border-pink-200 text-2xl text-pink-600 shadow-sm active:bg-pink-100">0</button>
+                        <button onclick="deletePin()" class="w-16 h-16 rounded-full text-pink-400 flex items-center justify-center active:bg-pink-50"><i data-lucide="delete" class="w-8 h-8"></i></button>
+                    </div>
+                </div>`;
+            } else if (state.page === 1) {
+                html = `<div class="flex flex-col items-center justify-center space-y-10 animate-fade-in no-select w-full">
+                    <h2 class="text-2xl font-medium text-pink-600">สแกนนิ้วเพื่อยืนยันตัวตนว่าเป็น "ลิน" 👆</h2>
+                    <div class="relative w-32 h-32 rounded-full border-4 border-pink-200 overflow-hidden bg-white shadow-inner flex items-center justify-center"
+                         onmousedown="startScan()" onmouseup="stopScan()" onmouseleave="stopScan()"
+                         ontouchstart="event.preventDefault(); startScan()" ontouchend="stopScan()">
+                        <div class="absolute bottom-0 left-0 w-full bg-pink-400 finger-scan-bg opacity-50" style="height: ${state.fingerProgress}%"></div>
+                        <i data-lucide="fingerprint" class="w-16 h-16 text-pink-500 relative z-10 ${state.fingerProgress > 0 ? 'animate-pulse' : ''}"></i>
+                    </div>
+                    <p class="text-pink-400">แตะค้างไว้ 3 วินาทีนะคั้บ</p>
+                </div>`;
+            } else if (state.page === 2) {
+                html = `<div class="flex flex-col items-center justify-center space-y-6 animate-fade-in no-select w-full" onclick="tapCandle()" ontouchstart="event.preventDefault(); tapCandle()">
+                    <h2 class="text-2xl font-semibold text-pink-600 bg-white/50 px-6 py-2 rounded-full shadow-sm">19 Nov 2026 🎂</h2>
+                    <p class="text-pink-500">เคาะหน้าจอเร็วๆ เพื่อเป่าเทียนให้ดับ!</p>
+                    <div class="relative w-48 h-48 mt-8">
+                        <div class="text-9xl text-center absolute inset-0">🎂</div>
+                        ${state.candleTaps < 15 ? `<div class="text-4xl absolute -top-4 left-1/2 -translate-x-1/2 animate-bounce">🔥</div>` : ''}
+                    </div>
+                    <div class="w-64 h-4 bg-pink-100 rounded-full overflow-hidden mt-8">
+                        <div class="h-full bg-orange-400 transition-all" style="width: ${(state.candleTaps/15)*100}%"></div>
+                    </div>
+                </div>`;
+            } else if (state.page === 3) {
+                html = `<div class="flex flex-col items-center justify-center space-y-12 animate-fade-in w-full px-8 no-select">
+                    <h2 class="text-3xl font-semibold text-pink-600">คิดถึงพี่แค่ไหนคั้บ? 🥺</h2>
+                    <input type="range" min="0" max="100" value="0" class="w-full max-w-sm" oninput="checkSlider(this.value)">
+                    <p class="text-pink-400 text-sm">เลื่อนให้สุดหลอดเลยนะ!</p>
+                </div>`;
+            } else if (state.page === 4) {
+                let chatHtml = state.chatMessages.map(msg => `<div class="bg-white px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-gray-700 w-fit max-w-[85%] animate-fade-in border border-pink-100 mb-3">${msg}</div>`).join('');
+                const btnHtml = state.chatMessages.length === messages.length ? `<button onclick="updateState({page: 5}); setTimeout(initScratchCard, 100);" class="mt-6 px-8 py-3 bg-pink-500 text-white rounded-full text-lg shadow-lg w-full animate-fade-in active:scale-95 transition-transform">ไปดูกันคั้บ! ✨</button>` : '';
+                html = `<div class="flex flex-col w-full max-w-md min-h-[65vh] bg-pink-50/50 p-6 rounded-3xl animate-fade-in shadow-sm border border-pink-100">
+                    <div class="flex items-center gap-3 mb-8 pb-4 border-b border-pink-200">
+                        <div class="w-10 h-10 bg-pink-200 rounded-full flex items-center justify-center"><i data-lucide="user" class="text-pink-500"></i></div>
+                        <h2 class="font-medium text-pink-700 text-lg">พี่เองงง 💕</h2>
+                    </div>
+                    <div class="flex flex-col flex-1">${chatHtml}${state.chatMessages.length < messages.length ? `<div class="text-xs text-pink-400 animate-pulse ml-2">กำลังพิมพ์...</div>` : ''}</div>
+                    ${btnHtml}
+                </div>`;
+            } else if (state.page === 5) {
+                html = `<div class="flex flex-col items-center justify-center space-y-6 animate-fade-in text-center px-4 w-full max-w-lg no-select">
+                    <h2 class="text-2xl font-semibold text-pink-600 mb-2">วันเกิดปีนี้ไปไหนดีน้า? 🤫</h2>
+                    <div class="relative w-full max-w-[300px] h-[200px] mx-auto bg-white rounded-2xl shadow-xl border-2 border-pink-200 flex flex-col items-center justify-center overflow-hidden">
+                        <div class="text-5xl mb-2">🍣</div>
+                        <h3 class="text-xl font-semibold text-pink-700">Shizen Machi Omakase</h3>
+                        <a href="https://share.google/xeeNcZXXYWj6aRFZG" target="_blank" class="text-pink-500 font-medium mt-2 underline flex items-center gap-1"><i data-lucide="map-pin" class="w-4 h-4"></i> เจอกัน 1 ทุ่มนะคั้บ!</a>
+                        <canvas id="scratch-canvas" width="300" height="200" class="rounded-2xl"></canvas>
+                    </div>
+                    <div id="next-btn-2" class="hidden mt-8 animate-fade-in w-full max-w-[300px]">
+                        <p class="text-pink-600 font-medium mb-4">เจอกันนะคั้บ เตรียมตัวให้พร้อม!</p>
+                        <p class="text-sm text-gray-500 bg-white p-3 rounded-xl border border-gray-200">ปล. รอติดตาม Part 2 เร็วๆ นี้นะคั้บ 🎁</p>
+                    </div>
+                </div>`;
+            }
+            app.innerHTML = html; lucide.createIcons();
+        }
+        renderApp();
+    </script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday Alin 💖 (Part 2)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body { font-family: 'Kanit', sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; background-color: #000; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+        
+        .story-container { position: relative; width: 100%; max-width: 420px; height: 85vh; max-height: 850px; background: #111; border-radius: 16px; overflow: hidden; margin: 0 auto; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); }
+        .story-image { width: 100%; height: 100%; object-fit: contain; }
+        .story-bars { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; gap: 4px; z-index: 20; }
+        .story-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }
+        .story-bar-fill { height: 100%; background: #fff; width: 0%; transition: width 0.1s linear; }
+        .story-bar.active .story-bar-fill { width: 100%; }
+        .story-bar.completed .story-bar-fill { width: 100%; }
+        .story-caption { position: absolute; bottom: 25px; left: 20px; right: 20px; color: white; text-align: center; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); font-size: 1.1rem; z-index: 20; }
+        .story-nav-left { position: absolute; top: 0; left: 0; width: 40%; height: 100%; z-index: 15; }
+        .story-nav-right { position: absolute; top: 0; right: 0; width: 60%; height: 100%; z-index: 15; }
+
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px) rotate(-5deg);} 75%{transform:translateX(5px) rotate(5deg);} }
+        .animate-shake { animation: shake 0.3s infinite; }
+        .bg-gradient-custom { background: linear-gradient(to bottom right, #fdfbfb, #ebedee); }
+
+        /* สไลเดอร์แก้โบว์ */
+        input[type=range].ribbon-slider { -webkit-appearance: none; width: 100%; background: #fce7f3; height: 16px; border-radius: 20px; border: 2px solid #fbcfe8; }
+        input[type=range].ribbon-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 50px; width: 50px; border-radius: 50%; background: #ec4899; cursor: pointer; margin-top: -18px; box-shadow: 0 4px 10px rgba(236,72,153,0.4); background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>'); background-position: center; background-repeat: no-repeat; }
+    </style>
+</head>
+<body class="min-h-screen bg-black flex justify-center items-center">
+
+    <div id="app" class="w-full h-full flex justify-center items-center min-h-screen relative"></div>
+
+    <script>
+        const storyData = [
+            { src: 'images/pic1.jpg', caption: 'เจอกันวันแรก!!' }, 
+            { src: 'images/pic2.jpg', caption: 'เด่กกซื้อขนมมาฝากด้วย น่ารักที่สุด 🍰' },
+            { src: 'images/pic3.jpg', caption: 'ซบไหล่หน่อยยย 🥰' },
+            { src: 'images/pic4.jpg', caption: 'ไปดูหนังด้วยกันครั้งแรก 🍿' },
+            { src: 'images/pic5.jpg', caption: 'Cloud 11 ที่ประจำ ;D' },
+            { src: 'images/pic6.jpg', caption: 'วิดีโอคอลคุยกันครั้งแรก เขินสุดๆ 😳' },
+            { src: 'images/pic7.jpg', caption: 'Alin OSK137 😝' },
+            { src: 'images/pic8.jpg', caption: 'เดต 1 month ที่ร้านอาหาร 🍷' },
+            { src: 'images/pic9.jpg', caption: 'แชะๆอีกสักรูป' },
+            { src: 'images/pic10.jpg', caption: 'รูปฟิล์มน่ารักๆ เก็บไว้เป็นความทรงจำ 📸'},
+            { src: 'images/pic11.jpg', caption: 'เด่กไป audit ไกล ก้อยังคถกังง' },
+            { src: 'images/pic12.jpg', caption: 'Heyyy Tea🍷' },
+            { src: 'images/pic13.jpg', caption: 'มาเนียนซบกันซะแล้ว ><' },
+            { src: 'images/pic14.jpg', caption: 'บุกห้องเด่กกก!!' },
+            { src: 'images/pic15.jpg', caption: 'Panick + Alin = Buffet 🥂' },
+            { src: 'images/pic16.jpg', caption: 'มื้อที่สุขที่สุด จากคนที่น่ารักที่สุด' },
+            { src: 'images/pic17.jpg', caption: 'ฝีมือทำอาหารของลิน อร่อยมากก! 🍳' },
+            { src: 'images/pic18.jpg', caption: 'เขาใหญ่ Here we Goooo' },
+            { src: 'images/pic19.jpg', caption: 'ถ่ายรูปหน้ากระจกเท่ๆ คู่กัน 🪞' },
+            { src: 'images/pic20.jpg', caption: 'เด่กสวย mood มากก' },
+            { src: 'images/pic21.jpg', caption: 'ซบไหล่อีกแล้วว น่ารัก 🥺' },
+            { src: 'images/pic22.jpg', caption: 'หมูกระทะเยียวยาทุกสิ่ง บรรยากาศดีสุดๆ 🥓' },
+            { src: 'images/pic23.jpg', caption: 'สายลุยก็มา! ใส่หมวกกันน็อกพร้อม ⛑️' },
+            { src: 'images/pic24.jpg', caption: 'นั่งกระเช้าดูสไลเดอร์สายรุ้ง 🌈' },
+            { src: 'images/pic25.jpg', caption: 'ร้านที่เด่กรอคอย ได้กินแล้วว' },
+            { src: 'images/pic26.jpg', caption: 'หม่ำๆ @ ฟาร์มโชคชัย' },
+            { src: 'images/pic27.jpg', caption: 'คาวเกิร์ลสุดน่ารักก 🤠' }, 
+            { src: 'images/pic28.jpg', caption: 'พามาฟิตเนส ออกกำลังกายด้วยกัน 💪' },
+            { src: 'images/pic29.jpg', caption: 'เด่กซุ่มซ่าม กินเลอะไปหมดแม้กระทั่ง Creatine' },
+            { src: 'images/pic30.jpg', caption: 'ดอกไม้ช่อใหญ่จากเด่กกของพี่ 💐' },
+            { src: 'images/pic31.jpg', caption: 'ความหมายของดอกลิลลี่ 🤍' },
+            { src: 'images/pic32.jpg', caption: 'Buffet ตลอดปัย ิ' },
+        ];
+
+        const quizData = [
+            { q: "เราไปเที่ยวเขาใหญ่กันวันที่เท่าไหร่คั้บ? 🌲", opts: ["16-18 Oct 2026", "23-25 Oct 2026", "24-26 Oct 2026", "30 Oct - 1 Nov 2026"], ans: 1 },
+            { q: "เมนูแรกที่ลินทำให้พี่กินคืออะไรเอ่ย? 🍳", opts: ["สเต็กไก่", "สปาเก็ตตี้คาโบนาร่า", "หมูสไลด์ย่าง", "กรีกโยเกิร์ต + องุ่น"], ans: 3 },
+            { q: "แล้วรู้ไหมพี่ชอบอะไรที่สุด? 🥺", opts: ["กอดอลิน", "ร้องเพลง", "สวนกุหลาบ", "ก็อตซิลล่า"], ans: 0 }
+        ];
+
+        let state = { page: 0, storyIndex: 0, loadingProgress: 0, shakeCount: 0, quizIndex: 0, wrongAns: false, countdownText: '3' };
+        function updateState(newState) { state = { ...state, ...newState }; renderApp(); }
+
+        // --- Page 0: Untie Ribbon ---
+        function checkRibbon(val) { if (val >= 95) setTimeout(() => updateState({ page: 1 }), 300); }
+
+        // --- Page 1: Shake ---
+        function initShakeEvent() {
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission().then(p => { if(p==='granted') window.addEventListener('devicemotion', handleMotion); }).catch(console.error);
+            } else window.addEventListener('devicemotion', handleMotion);
+        }
+        function handleMotion(e) {
+            const acc = e.accelerationIncludingGravity; if (!acc) return;
+            const force = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+            if (force > 15) {
+                state.shakeCount++;
+                const gb = document.getElementById('gift-box'); if (gb) gb.classList.add('animate-shake');
+                if (state.shakeCount > 8) { window.removeEventListener('devicemotion', handleMotion); updateState({ page: 2 }); }
+                setTimeout(() => { if (gb) gb.classList.remove('animate-shake'); }, 400);
+            }
+        }
+        function forceOpenGift() { updateState({ page: 2 }); }
+
+        // --- Page 2: Quiz ---
+        function answerQuiz(idx) {
+            if (idx === quizData[state.quizIndex].ans) {
+                if (state.quizIndex < 2) {
+                    updateState({ quizIndex: state.quizIndex + 1, wrongAns: false });
+                } else {
+                    // ตอบถูกหมด! ไปหน้าเคานต์ดาวน์บิ๊วอารมณ์
+                    startCountdown(); 
+                }
+            } else {
+                updateState({ wrongAns: true });
+                alert('ผิดค้าบบบ! นึกดีๆ น้า 😝');
+                setTimeout(() => updateState({ wrongAns: false }), 500);
+            }
+        }
+
+        // --- Page 3: Suspense Countdown ---
+        function startCountdown() {
+            updateState({ page: 3, countdownText: '3' });
+            let c = 3;
+            let iv = setInterval(() => {
+                c--;
+                if (c > 0) {
+                    updateState({ countdownText: c.toString() });
+                } else if (c === 0) {
+                    updateState({ countdownText: 'แต่นแต๊นน!' });
+                } else {
+                    clearInterval(iv);
+                    fireConfetti(100); // พลุแตกตอนของขวัญโผล่!
+                    updateState({ page: 4 });
+                }
+            }, 1000);
+        }
+
+        // --- Page 6: Story ---
+        function nextStory() { if (state.storyIndex < storyData.length - 1) updateState({ storyIndex: state.storyIndex + 1 }); else { updateState({ page: 7 }); startLoading(); } }
+        function prevStory() { if (state.storyIndex > 0) updateState({ storyIndex: state.storyIndex - 1 }); }
+        
+        // --- Page 7: Loading ---
+        function startLoading() {
+            let p = 0;
+            const iv = setInterval(() => {
+                p += Math.floor(Math.random() * 8) + 4;
+                if (p >= 100) { p = 100; clearInterval(iv); setTimeout(() => updateState({ page: 8 }), 800); }
+                updateState({ loadingProgress: p });
+            }, 250);
+        }
+
+        // --- Page 8: Confession ---
+        function moveNoButton(btn) {
+            const newX = Math.floor(Math.random() * 60) + 10; const newY = Math.floor(Math.random() * 70) + 10;
+            btn.style.position = 'fixed'; btn.style.left = `${newX}vw`; btn.style.top = `${newY}vh`; btn.style.zIndex = '50';
+        }
+
+        function fireConfetti(particles = 40) {
+            var end = Date.now() + 5000;
+            var interval = setInterval(function() {
+                if (Date.now() > end) return clearInterval(interval);
+                confetti({ particleCount: particles, spread: 360, startVelocity: 30, origin: { x: Math.random(), y: Math.random() - 0.2 }, zIndex: 100 });
+            }, 250);
+        }
+
+        function renderApp() {
+            const app = document.getElementById('app');
+            let html = '';
+
+            // 0: ปัดแก้เชือกโบว์
+            if (state.page === 0) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-12 animate-fade-in text-center px-8 w-full no-select">
+                    <i data-lucide="gift" class="w-24 h-24 text-pink-500 mb-4 animate-bounce"></i>
+                    <h2 class="text-2xl font-semibold text-pink-600 mb-8">สไลด์แก้เชือกโบว์ของขวัญกัน! 🎀</h2>
+                    <input type="range" min="0" max="100" value="0" class="ribbon-slider w-full max-w-sm" oninput="checkRibbon(this.value)">
+                </div>`;
+            
+            // 1: เขย่าเพื่อเปิดกล่อง
+            } else if (state.page === 1) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-8 animate-fade-in text-center px-4 w-full no-select">
+                    <h2 class="text-3xl font-semibold text-pink-600">แก้โบว์เสร็จแล้ว! 🎁</h2>
+                    <p class="text-lg text-pink-500 mb-8">ทีนี้ลอง <span class="font-bold">"เขย่ามือถือ"</span> แรงๆ เพื่อแกะกล่องนะคั้บ!</p>
+                    <div id="gift-box" onclick="forceOpenGift()" class="w-40 h-40 bg-pink-100 rounded-3xl shadow-2xl border-4 border-pink-300 flex items-center justify-center relative cursor-pointer transform hover:scale-105 transition">
+                        <div class="absolute w-full h-6 bg-pink-300 top-1/2 -translate-y-1/2"></div>
+                        <div class="absolute h-full w-6 bg-pink-300 left-1/2 -translate-x-1/2"></div>
+                    </div>
+                    <button onclick="initShakeEvent()" class="mt-8 px-6 py-2 bg-pink-200 text-pink-700 rounded-full text-sm font-medium">(กดเปิดระบบเซ็นเซอร์เขย่ามือถือ)</button>
+                    <button onclick="forceOpenGift()" class="mt-2 text-sm text-gray-400 underline">หรือจิ้มที่กล่องเพื่อแกะเลยคั้บ</button>
+                </div>`;
+            
+            // 2: คำถาม (Quiz) คั่นก่อน
+            } else if (state.page === 2) {
+                const q = quizData[state.quizIndex];
+                let optsHtml = q.opts.map((opt, i) => `<button onclick="answerQuiz(${i})" class="w-full p-4 bg-white border-2 border-pink-100 rounded-2xl text-gray-700 font-medium shadow-sm hover:bg-pink-50 active:bg-pink-100 transition text-left pl-6">${opt}</button>`).join('');
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen px-6 animate-fade-in w-full ${state.wrongAns ? 'animate-shake' : ''}">
+                    <div class="w-full max-w-sm">
+                        <p class="text-pink-500 font-medium mb-2 animate-bounce">ช้าก่อนนน! ตอบให้ถูกก่อนได้ของขวัญนะคั้บ 😝</p>
+                        <div class="bg-pink-100 text-pink-600 font-bold px-4 py-1 rounded-full w-fit mb-6 text-sm">คำถามที่ ${state.quizIndex + 1}/3</div>
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-8 leading-snug">${q.q}</h2>
+                        <div class="flex flex-col gap-3">${optsHtml}</div>
+                    </div>
+                </div>`;
+
+            // 3: Suspense Countdown (ลูกเล่นบิ๊วอารมณ์ก่อนเปิดกล่อง)
+            } else if (state.page === 3) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-8 animate-fade-in text-center px-4 w-full no-select">
+                    <h2 class="text-3xl font-semibold text-pink-600 mb-2">ตอบถูกหมดเลย! เก่งมากคั้บ 👏</h2>
+                    <p class="text-pink-400 font-medium mb-4">กำลังปลดล็อกความลับ...</p>
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-pink-400 blur-xl opacity-60 rounded-full animate-ping" style="animation-duration: 0.6s;"></div>
+                        <div class="w-40 h-40 bg-pink-100 rounded-3xl shadow-2xl border-4 border-pink-300 flex items-center justify-center relative animate-shake" style="animation-duration: 0.1s;">
+                            <div class="absolute w-full h-6 bg-pink-300 top-1/2 -translate-y-1/2"></div>
+                            <div class="absolute h-full w-6 bg-pink-300 left-1/2 -translate-x-1/2"></div>
+                        </div>
+                    </div>
+                    <div class="text-6xl font-bold text-pink-600 drop-shadow-lg transition-transform transform scale-125 mt-10">${state.countdownText}</div>
+                </div>`;
+
+            // 4: เฉลยของขวัญ
+            } else if (state.page === 4) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-6 animate-fade-in text-center px-4 w-full">
+                    <h2 class="text-3xl font-semibold text-pink-600 mb-4">รับของขวัญไปเลยยย 🎉</h2>
+                    <div class="flex flex-col gap-4 w-full max-w-sm">
+                        <div class="bg-white p-6 rounded-3xl shadow-lg border border-pink-100 flex flex-col items-center">
+                            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4"><i data-lucide="monitor-play" class="w-8 h-8 text-blue-500"></i></div>
+                            <h3 class="text-lg font-semibold text-gray-800">Asus ZenScreen</h3>
+                            <p class="text-sm text-gray-500 mt-1">Portable Monitor ไว้ใช้ทำงานนะคั้บ 💻</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl shadow-lg border border-pink-100 flex flex-col items-center">
+                            <div class="w-16 h-16 bg-pink-50 rounded-full flex items-center justify-center mb-4"><i data-lucide="sparkles" class="w-8 h-8 text-pink-500"></i></div>
+                            <h3 class="text-lg font-semibold text-pink-600">Secret Gift 🎁</h3>
+                            <p class="text-sm text-pink-400 mt-1">(เดี๋ยวพี่ให้พร้อมกันนะคั้บ!)</p>
+                        </div>
+                    </div>
+                    <button onclick="updateState({page: 5})" class="mt-8 px-8 py-3 bg-pink-500 text-white rounded-full text-lg shadow-lg flex items-center gap-2 active:scale-95 transition">
+                        ไปหน้าต่อไปคั้บ <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                </div>`;
+            
+            // 5: หน้า Transition คั่นจังหวะก่อนดูรูป
+            } else if (state.page === 5) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen p-6 animate-fade-in no-select w-full text-center">
+                    <div class="bg-white/90 backdrop-blur-md p-10 rounded-3xl shadow-xl w-full max-w-sm border border-pink-100">
+                        <i data-lucide="camera" class="w-16 h-16 text-pink-400 mx-auto mb-6"></i>
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-6 leading-relaxed">
+                            ลองมองย้อนกลับไป<br>ตั้งแต่วันแรก...
+                        </h2>
+                        <p class="text-pink-500 font-medium mb-10 text-lg">เราผ่านอะไรกันมาเยอะเหมือนกันเนาะ 🥺</p>
+                        
+                        <button onclick="updateState({page: 6})" class="w-full px-6 py-4 bg-pink-500 text-white font-semibold rounded-full text-lg shadow-md active:scale-95 transition flex justify-center items-center gap-2">
+                            ไปดูความทรงจำของเรา ✨
+                        </button>
+                    </div>
+                </div>`;
+
+            // 6: IG Story
+            } else if (state.page === 6) {
+                let barsHtml = storyData.map((_, idx) => `<div class="story-bar ${idx < state.storyIndex ? 'completed' : idx === state.storyIndex ? 'active' : ''}"><div class="story-bar-fill"></div></div>`).join('');
+                const currentImg = storyData[state.storyIndex];
+                html = `<div class="flex flex-col items-center justify-center w-full min-h-screen bg-black animate-fade-in no-select p-2">
+                    <div class="story-container w-full h-[85vh]">
+                        <div class="story-bars">${barsHtml}</div>
+                        <img src="${currentImg.src}" class="story-image bg-gray-900" alt="Memory">
+                        <div class="story-caption bg-black/50 p-3 rounded-xl backdrop-blur-sm">${currentImg.caption}</div>
+                        <div class="story-nav-left" onclick="prevStory()"></div>
+                        <div class="story-nav-right" onclick="nextStory()"></div>
+                    </div>
+                </div>`;
+            
+            // 7: โหลดความรู้สึก
+            } else if (state.page === 7) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen w-full px-8 animate-fade-in text-center">
+                    <i data-lucide="heart-handshake" class="w-16 h-16 text-pink-400 mb-6 animate-pulse"></i>
+                    <h2 class="text-2xl font-medium text-pink-600 mb-8">กำลังประมวลผลความรู้สึก...</h2>
+                    <div class="w-full max-w-sm h-4 bg-pink-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-pink-500 transition-all duration-200" style="width: ${state.loadingProgress}%"></div>
+                    </div>
+                    <p class="mt-4 text-pink-500 font-semibold text-lg">${state.loadingProgress}%</p>
+                </div>`;
+            
+            // 8: ขอเป็นแฟน (ปุ่มวิ่งหนี)
+            } else if (state.page === 8) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen p-4 animate-fade-in no-select w-full">
+                    <div class="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-xl text-center w-full max-w-sm border border-pink-100">
+                        <p class="text-lg text-gray-700 leading-relaxed mb-8 font-medium text-left indent-8">
+                            เรารู้จักกันมาจะครบ 3 เดือนแล้วนะพี่ว่าเราทำอะไรด้วยกันมาเยอะมากๆ...
+                        </p>
+                        <h2 class="text-3xl font-semibold text-pink-600 mb-10 animate-pulse">เป็นแฟนกับพี่ไหมคั้บ? 🥺</h2>
+                        <div class="flex justify-center gap-4 relative h-16 items-center w-full">
+                            <button onclick="updateState({page: 9}); fireConfetti();" class="px-6 py-3 bg-pink-500 text-white font-semibold rounded-full text-lg shadow-lg z-10 active:scale-95 transition">เป็นแฟน! 💕</button>
+                            <button onmouseover="moveNoButton(this)" ontouchstart="event.preventDefault(); moveNoButton(this)" class="px-6 py-3 bg-gray-400 text-white font-semibold rounded-full text-lg shadow-lg z-10 transition-all duration-200">ไม่เป็น!</button>
+                        </div>
+                    </div>
+                </div>`;
+            
+            // 9: Success และเพิ่ม Day 1
+            } else if (state.page === 9) {
+                html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen text-center px-4 relative animate-fade-in w-full">
+                    <div class="bg-white/90 p-10 rounded-3xl shadow-2xl z-10 border-4 border-pink-200 max-w-sm relative overflow-hidden">
+                        <i data-lucide="heart" class="w-24 h-24 text-pink-500 mx-auto mb-6 animate-pulse" fill="#ec4899"></i>
+                        <h1 class="text-5xl font-semibold text-pink-600 mb-4">เย้! 🎉</h1>
+                        <h2 class="text-3xl font-medium text-pink-500 mb-2">รักลินนะคั้บ 💕</h2>
+                        <p class="text-gray-600 mt-4 text-lg">เป็นแฟนกันแล้วน้าาา 🥰</p>
+                        
+                        <!-- ป้ายประทับ Day 1 -->
+                        <div class="mt-10 pt-6 border-t border-pink-100">
+                            <span class="inline-block bg-pink-100 text-pink-600 px-6 py-2 rounded-full font-semibold text-lg shadow-sm">
+                                Day 1 : 19 Nov 2026 🗓️
+                            </span>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            app.innerHTML = html; lucide.createIcons();
+        }
+        renderApp();
+    </script>
+</body>
+</html>
