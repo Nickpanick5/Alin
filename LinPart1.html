@@ -7,27 +7,77 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: 'Kanit', sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        .no-select { user-select: none; -webkit-user-select: none; }
-        #scratch-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; touch-action: none; }
+        body { font-family: 'Kanit', sans-serif; margin: 0; overflow-x: hidden; touch-action: manipulation; background-color: #fdf2f8; }
         
-        /* สไตล์หลอดสแกนนิ้ว */
+        /* --- Super Animations --- */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeUpSmoke { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-15px) scale(1.5); } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 70% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes floatHeart { 0% { opacity: 0; transform: translateY(0) scale(0.8) rotate(-10deg); } 20% { opacity: 0.5; } 80% { opacity: 0.3; } 100% { opacity: 0; transform: translateY(-100vh) scale(1.2) rotate(10deg); } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 15px rgba(244,114,182,0.4); } 50% { box-shadow: 0 0 30px rgba(244,114,182,0.7); transform: scale(1.02); } }
+        
+        .animate-fade-up { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-smoke { animation: fadeUpSmoke 1s ease-out forwards; }
+        .animate-pop-in { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .animate-pulse-glow { animation: pulseGlow 2s infinite ease-in-out; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+        
+        .bg-gradient-custom { background: radial-gradient(circle at top right, #fce7f3 0%, #fff7ed 50%, #fbcfe8 100%); }
+        .floating-particle { position: fixed; z-index: 0; pointer-events: none; }
+
+        /* --- Scratch Canvas --- */
+        #scratch-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; touch-action: none; border-radius: 1rem; }
+        
+        /* --- Fingerprint Bar --- */
         .finger-scan-bg { transition: height 0.1s linear; }
         
-        /* สไลเดอร์ความรัก */
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 40px; width: 40px; border-radius: 50%; background: #ec4899; cursor: pointer; margin-top: -16px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; background: #fbcfe8; border-radius: 10px; }
+        /* --- Love Slider --- */
+        input[type=range].love-slider { -webkit-appearance: none; width: 100%; background: #fce7f3; height: 16px; border-radius: 20px; border: 2px solid #fbcfe8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        input[type=range].love-slider::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 50px; width: 50px; border-radius: 50%; background: #ec4899; cursor: pointer; margin-top: -18px; box-shadow: 0 4px 15px rgba(236,72,153,0.5); border: 3px solid #fff; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'); 
+            background-position: center; background-repeat: no-repeat; transition: transform 0.1s; 
+        }
+        input[type=range].love-slider::-webkit-slider-thumb:active { transform: scale(1.1); }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-pink-50 via-orange-50 to-pink-100 flex justify-center items-center">
+<body class="min-h-screen bg-gradient-custom flex justify-center items-center overflow-hidden relative text-gray-800">
 
-    <div id="app" class="w-full h-full flex justify-center items-center min-h-screen relative"></div>
+    <div id="app" class="w-full h-full flex justify-center items-center min-h-screen relative z-10"></div>
 
     <script>
+        // ==========================================
+        // Particle System (พื้นหลังโรแมนติก)
+        // ==========================================
+        function spawnParticle() {
+            const el = document.createElement('div');
+            el.className = 'floating-particle';
+            const emojis = ['💖', '✨', '💕', '🥰', '🎈'];
+            el.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.bottom = '-50px';
+            el.style.fontSize = (Math.random() * 15 + 15) + 'px';
+            el.style.opacity = Math.random() * 0.5 + 0.2;
+            el.style.animation = `floatHeart ${Math.random() * 4 + 5}s ease-in forwards`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 9000);
+        }
+        setInterval(spawnParticle, 800); 
+
+        // ==========================================
+        // ตำแหน่งเทียน 24 เล่มบนเค้ก (x, y เป็น % ของกล่องเค้ก)
+        // ==========================================
+        const candlePositions = [
+            // แถวหลัง (7 เล่ม)
+            {x: 20, y: 15}, {x: 30, y: 12}, {x: 40, y: 10}, {x: 50, y: 9}, {x: 60, y: 10}, {x: 70, y: 12}, {x: 80, y: 15},
+            // แถวกลาง (8 เล่ม)
+            {x: 15, y: 35}, {x: 25, y: 30}, {x: 35, y: 27}, {x: 45, y: 25}, {x: 55, y: 25}, {x: 65, y: 27}, {x: 75, y: 30}, {x: 85, y: 35},
+            // แถวหน้า (9 เล่ม)
+            {x: 12, y: 58}, {x: 21, y: 52}, {x: 31, y: 47}, {x: 41, y: 44}, {x: 50, y: 43}, {x: 59, y: 44}, {x: 69, y: 47}, {x: 79, y: 52}, {x: 88, y: 58}
+        ];
+
         let state = { 
             page: 0, 
             pin: '', 
@@ -50,7 +100,8 @@
                 if (newPin.length === 4) {
                     setTimeout(() => {
                         if (newPin === '2808') { 
-                            updateState({ page: 1, pin: '' }); 
+                            fireConfetti(60);
+                            setTimeout(() => updateState({ page: 1, pin: '' }), 600);
                         } else { 
                             updateState({ pin: '', pinFails: state.pinFails + 1 });
                             if (state.pinFails < 2) alert('รหัสผิดค้าบ ลองใหม่น้า 😝');
@@ -75,12 +126,13 @@
         }
         function stopScan() { clearInterval(holdTimer); updateState({ fingerProgress: 0 }); }
 
-        // --- Page 2: Candles ---
+        // --- Page 2: Candles (24) ---
         function tapCandle() {
-            if (state.candleTaps < 15) {
+            if (state.candleTaps < 24) {
                 updateState({ candleTaps: state.candleTaps + 1 });
-                if (state.candleTaps >= 14) {
-                    setTimeout(() => updateState({ page: 3 }), 800);
+                if (state.candleTaps === 24) {
+                    fireConfetti(100);
+                    setTimeout(() => updateState({ page: 3 }), 1200);
                 }
             }
         }
@@ -93,7 +145,13 @@
         }
 
         // --- Page 4: Chat ---
-        const messages = ["Happy Birthday น้าค้าบเด่กก! 🎉", "วันนี้ 19 Nov 2026 วันพิเศษของลินทั้งที...", "พี่มีภารกิจมาให้เล่นด้วยแหละ 😉", "พร้อมไปเดตกับพี่รึยังง?", "ถ้าพร้อมแล้ว กดปุ่มข้างล่างเลยคั้บ!"];
+        const messages = [
+            "Happy Birthday น้าค้าบเด่กก! 🎉", 
+            "วันนี้ 19 Nov 2026 วันพิเศษของเด่กกทั้งที...", 
+            "พี่มีภารกิจมาให้เล่นด้วยแหละ 😉", 
+            "พร้อมไปเดตกับพี่รึยังง?", 
+            "ถ้าพร้อมแล้ว กดปุ่มข้างล่างเลยคั้บ!"
+        ];
         function startChat() {
             let i = 0;
             const interval = setInterval(() => {
@@ -110,10 +168,17 @@
             const canvas = document.getElementById('scratch-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#cbd5e1';
+            
+            // วาดพื้นหลังบัตรขูดสวยๆ
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#e2e8f0');
+            gradient.addColorStop(0.5, '#cbd5e1');
+            gradient.addColorStop(1, '#94a3b8');
+            ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = '18px Kanit'; ctx.fillStyle = '#64748b'; ctx.textAlign = 'center';
-            ctx.fillText('ใช้นิ้วถูตรงนี้เพื่อดูว่าวันนี้ไปไหน! 👆', canvas.width/2, canvas.height/2);
+            
+            ctx.font = 'bold 20px Kanit'; ctx.fillStyle = '#475569'; ctx.textAlign = 'center';
+            ctx.fillText('ใช้นิ้วถูตรงนี้เพื่อดูว่าไปไหน! ✨', canvas.width/2, canvas.height/2);
 
             let isDrawing = false; let scratchedPixels = 0;
             function scratch(e) {
@@ -123,88 +188,139 @@
                 const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
                 const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x, y, 28, 0, Math.PI * 2); ctx.fill();
                 scratchedPixels++;
-                if (scratchedPixels > 80 && !state.isScratching) {
+                if (scratchedPixels > 70 && !state.isScratching) {
                     state.isScratching = true;
-                    canvas.style.transition = 'opacity 0.8s'; canvas.style.opacity = '0';
-                    setTimeout(() => { canvas.style.display = 'none'; document.getElementById('next-btn-2').style.display = 'block'; }, 800);
+                    canvas.style.transition = 'opacity 0.8s ease-out'; canvas.style.opacity = '0';
+                    fireConfetti(60);
+                    setTimeout(() => { canvas.style.display = 'none'; document.getElementById('next-btn-2').classList.remove('hidden'); }, 800);
                 }
             }
             canvas.addEventListener('mousedown', () => isDrawing = true); canvas.addEventListener('mouseup', () => isDrawing = false); canvas.addEventListener('mousemove', scratch);
             canvas.addEventListener('touchstart', () => isDrawing = true, {passive: false}); canvas.addEventListener('touchend', () => isDrawing = false); canvas.addEventListener('touchmove', scratch, {passive: false});
         }
 
+        function fireConfetti(particles = 50) {
+            confetti({ particleCount: particles, spread: 100, startVelocity: 30, origin: { y: 0.6 }, zIndex: 100 });
+        }
+
         function renderApp() {
             const app = document.getElementById('app');
             let html = '';
             
+            // ================== PAGE 0: PIN ==================
             if (state.page === 0) {
-                let dots = ''; for (let i = 0; i < 4; i++) dots += `<div class="w-4 h-4 rounded-full ${i < state.pin.length ? 'bg-pink-500' : 'border-2 border-pink-300'}"></div>`;
-                let keypad = ''; for (let i = 1; i <= 9; i++) keypad += `<button onclick="handlePin('${i}')" class="w-16 h-16 rounded-full bg-white border border-pink-200 text-2xl text-pink-600 shadow-sm active:bg-pink-100">${i}</button>`;
-                html = `<div class="flex flex-col items-center justify-center w-full max-w-sm px-4 animate-fade-in no-select">
-                    <i data-lucide="lock" class="w-10 h-10 text-pink-400 mb-2"></i>
-                    <h2 class="text-xl text-pink-600 mb-2 font-medium">ใส่รหัสเพื่อปลดล็อก 🔐</h2>
-                    ${state.pinFails >= 3 ? `<p class="text-sm text-pink-500 mb-4 animate-pulse">💡 คำใบ้: วันแรกที่เรารู้จักกัน (ววดด)</p>` : `<div class="h-9 mb-4"></div>`}
-                    <div class="flex gap-4 mb-8">${dots}</div>
+                let dots = ''; for (let i = 0; i < 4; i++) dots += `<div class="w-4 h-4 rounded-full transition-all duration-200 ${i < state.pin.length ? 'bg-pink-500 scale-110 shadow-md' : 'bg-pink-200'}"></div>`;
+                let keypad = ''; for (let i = 1; i <= 9; i++) keypad += `<button onclick="handlePin('${i}')" class="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-100 text-2xl text-pink-600 shadow-sm hover:scale-105 active:scale-95 active:bg-pink-100 transition-all">${i}</button>`;
+                html = `<div class="flex flex-col items-center justify-center w-full max-w-sm px-6 py-10 animate-pop-in no-select bg-white/60 backdrop-blur-lg rounded-3xl shadow-xl border border-white m-4">
+                    <i data-lucide="lock" class="w-12 h-12 text-pink-400 mb-3 drop-shadow-sm"></i>
+                    <h2 class="text-2xl text-pink-600 mb-2 font-bold drop-shadow-sm">ใส่รหัสเพื่อปลดล็อก 🔐</h2>
+                    ${state.pinFails >= 3 ? `<p class="text-sm text-pink-500 mb-4 animate-pulse font-medium bg-pink-100 px-3 py-1 rounded-full">💡 คำใบ้: วันแรกที่เรารู้จักกัน (ววดด)</p>` : `<div class="h-9 mb-4"></div>`}
+                    <div class="flex gap-5 mb-10">${dots}</div>
                     <div class="grid grid-cols-3 gap-6">
                         ${keypad} <div></div>
-                        <button onclick="handlePin('0')" class="w-16 h-16 rounded-full bg-white border border-pink-200 text-2xl text-pink-600 shadow-sm active:bg-pink-100">0</button>
-                        <button onclick="deletePin()" class="w-16 h-16 rounded-full text-pink-400 flex items-center justify-center active:bg-pink-50"><i data-lucide="delete" class="w-8 h-8"></i></button>
+                        <button onclick="handlePin('0')" class="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm border-2 border-pink-100 text-2xl text-pink-600 shadow-sm hover:scale-105 active:scale-95 active:bg-pink-100 transition-all">0</button>
+                        <button onclick="deletePin()" class="w-16 h-16 rounded-full text-pink-400 flex items-center justify-center hover:scale-105 active:scale-95 active:bg-pink-50 transition-all bg-white/50"><i data-lucide="delete" class="w-8 h-8"></i></button>
                     </div>
                 </div>`;
+            
+            // ================== PAGE 1: Fingerprint ==================
             } else if (state.page === 1) {
-                html = `<div class="flex flex-col items-center justify-center space-y-10 animate-fade-in no-select w-full">
-                    <h2 class="text-2xl font-medium text-pink-600">สแกนนิ้วเพื่อยืนยันตัวตนว่าเป็น "ลิน" 👆</h2>
-                    <div class="relative w-32 h-32 rounded-full border-4 border-pink-200 overflow-hidden bg-white shadow-inner flex items-center justify-center"
+                html = `<div class="flex flex-col items-center justify-center space-y-10 animate-pop-in no-select w-full bg-white/60 backdrop-blur-lg rounded-3xl shadow-xl border border-white m-4 p-10 max-w-sm">
+                    <h2 class="text-2xl font-bold text-pink-600 text-center leading-snug drop-shadow-sm">สแกนนิ้วเพื่อยืนยันตัวตน<br>ว่าเป็น "เด่กก" 👆</h2>
+                    <div class="relative w-36 h-36 rounded-full border-4 border-pink-200 overflow-hidden bg-white/80 shadow-inner flex items-center justify-center animate-pulse-glow cursor-pointer"
                          onmousedown="startScan()" onmouseup="stopScan()" onmouseleave="stopScan()"
                          ontouchstart="event.preventDefault(); startScan()" ontouchend="stopScan()">
-                        <div class="absolute bottom-0 left-0 w-full bg-pink-400 finger-scan-bg opacity-50" style="height: ${state.fingerProgress}%"></div>
-                        <i data-lucide="fingerprint" class="w-16 h-16 text-pink-500 relative z-10 ${state.fingerProgress > 0 ? 'animate-pulse' : ''}"></i>
+                        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-pink-400 to-pink-300 finger-scan-bg opacity-70" style="height: ${state.fingerProgress}%"></div>
+                        <i data-lucide="fingerprint" class="w-16 h-16 text-pink-500 relative z-10 ${state.fingerProgress > 0 ? 'animate-pulse scale-110 transition-transform' : 'transition-transform'}"></i>
                     </div>
-                    <p class="text-pink-400">แตะค้างไว้ 3 วินาทีนะคั้บ</p>
+                    <p class="text-pink-500 font-medium bg-pink-100 px-4 py-1.5 rounded-full shadow-sm">แตะค้างไว้ 3 วินาทีนะคั้บ</p>
                 </div>`;
+            
+            // ================== PAGE 2: Candles 24 ==================
             } else if (state.page === 2) {
-                html = `<div class="flex flex-col items-center justify-center space-y-6 animate-fade-in no-select w-full" onclick="tapCandle()" ontouchstart="event.preventDefault(); tapCandle()">
-                    <h2 class="text-2xl font-semibold text-pink-600 bg-white/50 px-6 py-2 rounded-full shadow-sm">19 Nov 2026 🎂</h2>
-                    <p class="text-pink-500">เคาะหน้าจอเร็วๆ เพื่อเป่าเทียนให้ดับ!</p>
-                    <div class="relative w-48 h-48 mt-8">
-                        <div class="text-9xl text-center absolute inset-0">🎂</div>
-                        ${state.candleTaps < 15 ? `<div class="text-4xl absolute -top-4 left-1/2 -translate-x-1/2 animate-bounce">🔥</div>` : ''}
+                // สร้างเทียน 24 เล่ม
+                let candlesHtml = candlePositions.map((pos, i) => {
+                    let isLit = i >= state.candleTaps;
+                    return `<div class="absolute transition-all duration-300 ${!isLit ? 'opacity-70' : ''}" style="top: ${pos.y}%; left: ${pos.x}%; transform: translate(-50%, -100%);">
+                        <div class="w-1.5 h-7 bg-gradient-to-b from-pink-100 to-pink-300 rounded-sm relative shadow-sm border border-pink-400/50">
+                            <!-- เปลวไฟ -->
+                            ${isLit ? `<div class="absolute -top-4 -left-[3px] w-3 h-5 bg-gradient-to-b from-yellow-200 to-orange-500 blur-[0.5px] animate-pulse rounded-full" style="border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; box-shadow: 0 0 8px rgba(255,165,0,0.8);"></div>`
+                            : `<div class="absolute -top-1.5 left-[2px] w-[2px] h-1.5 bg-gray-600 rounded-full opacity-60"></div>
+                               <div class="absolute -top-6 -left-1 text-[14px] opacity-0 animate-smoke">💨</div>`}
+                        </div>
+                    </div>`;
+                }).join('');
+
+                html = `<div class="flex flex-col items-center justify-center space-y-6 animate-pop-in no-select w-full h-screen" onclick="tapCandle()" ontouchstart="event.preventDefault(); tapCandle()">
+                    <div class="bg-white/80 backdrop-blur-md px-6 py-2 rounded-full shadow-md border border-pink-100 animate-fade-up">
+                        <h2 class="text-2xl font-bold text-pink-600 drop-shadow-sm">19 Nov 2026 🎂</h2>
                     </div>
-                    <div class="w-64 h-4 bg-pink-100 rounded-full overflow-hidden mt-8">
-                        <div class="h-full bg-orange-400 transition-all" style="width: ${(state.candleTaps/15)*100}%"></div>
+                    <p class="text-pink-600 font-medium bg-white/60 px-4 py-1.5 rounded-2xl shadow-sm text-center animate-fade-up" style="animation-delay: 0.1s;">อายุ 24 แล้ว!<br>เคาะจอ 24 ครั้งเพื่อเป่าเทียนให้ดับทีละเล่มนะคั้บ 🌬️</p>
+                    
+                    <div class="relative w-72 h-72 mt-8 flex items-center justify-center drop-shadow-2xl animate-pop-in" style="animation-delay: 0.2s;">
+                        <!-- เค้ก Emoji ใหญ่ๆ -->
+                        <div class="text-[160px] leading-none select-none relative top-8">🎂</div>
+                        <!-- คอนเทนเนอร์ปักเทียน (ครอบคลุมพื้นที่ด้านบนของเค้ก) -->
+                        <div class="absolute top-[10%] left-[10%] w-[80%] h-[50%]">
+                            ${candlesHtml}
+                        </div>
                     </div>
+                    
+                    <div class="w-64 h-4 bg-pink-200/80 backdrop-blur-sm rounded-full overflow-hidden mt-8 shadow-inner border border-pink-300/50 animate-fade-up" style="animation-delay: 0.3s;">
+                        <div class="h-full bg-gradient-to-r from-orange-300 to-orange-500 transition-all duration-200" style="width: ${(state.candleTaps/24)*100}%"></div>
+                    </div>
+                    <p class="text-sm font-bold text-orange-500 animate-fade-up" style="animation-delay: 0.3s;">${state.candleTaps} / 24</p>
                 </div>`;
+            
+            // ================== PAGE 3: Love Slider ==================
             } else if (state.page === 3) {
-                html = `<div class="flex flex-col items-center justify-center space-y-12 animate-fade-in w-full px-8 no-select">
-                    <h2 class="text-3xl font-semibold text-pink-600">คิดถึงพี่แค่ไหนคั้บ? 🥺</h2>
-                    <input type="range" min="0" max="100" value="0" class="w-full max-w-sm" oninput="checkSlider(this.value)">
-                    <p class="text-pink-400 text-sm">เลื่อนให้สุดหลอดเลยนะ!</p>
-                </div>`;
-            } else if (state.page === 4) {
-                let chatHtml = state.chatMessages.map(msg => `<div class="bg-white px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-gray-700 w-fit max-w-[85%] animate-fade-in border border-pink-100 mb-3">${msg}</div>`).join('');
-                const btnHtml = state.chatMessages.length === messages.length ? `<button onclick="updateState({page: 5}); setTimeout(initScratchCard, 100);" class="mt-6 px-8 py-3 bg-pink-500 text-white rounded-full text-lg shadow-lg w-full animate-fade-in active:scale-95 transition-transform">ไปดูกันคั้บ! ✨</button>` : '';
-                html = `<div class="flex flex-col w-full max-w-md min-h-[65vh] bg-pink-50/50 p-6 rounded-3xl animate-fade-in shadow-sm border border-pink-100">
-                    <div class="flex items-center gap-3 mb-8 pb-4 border-b border-pink-200">
-                        <div class="w-10 h-10 bg-pink-200 rounded-full flex items-center justify-center"><i data-lucide="user" class="text-pink-500"></i></div>
-                        <h2 class="font-medium text-pink-700 text-lg">พี่เองงง 💕</h2>
+                html = `<div class="flex flex-col items-center justify-center space-y-12 animate-pop-in w-full px-8 no-select bg-white/60 backdrop-blur-lg rounded-3xl shadow-xl border border-white m-4 py-16 max-w-sm">
+                    <i data-lucide="heart" class="w-20 h-20 text-pink-500 mb-2 animate-pulse" fill="#ec4899"></i>
+                    <h2 class="text-3xl font-bold text-pink-600 drop-shadow-sm text-center">คิดถึงพี่แค่ไหนคั้บ? 🥺</h2>
+                    <div class="w-full relative px-2">
+                        <input type="range" min="0" max="100" value="0" class="love-slider w-full" oninput="checkSlider(this.value)">
                     </div>
-                    <div class="flex flex-col flex-1">${chatHtml}${state.chatMessages.length < messages.length ? `<div class="text-xs text-pink-400 animate-pulse ml-2">กำลังพิมพ์...</div>` : ''}</div>
+                    <p class="text-pink-500 font-medium bg-pink-100 px-4 py-1.5 rounded-full shadow-sm text-sm">เลื่อนหัวใจให้สุดหลอดเลยนะ!</p>
+                </div>`;
+            
+            // ================== PAGE 4: Chat ==================
+            } else if (state.page === 4) {
+                let chatHtml = state.chatMessages.map((msg, idx) => `<div class="bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-2xl rounded-tl-none shadow-md text-gray-700 w-fit max-w-[85%] animate-fade-up border border-pink-100 mb-3 font-medium text-[15px]" style="animation-delay: 0.1s;">${msg}</div>`).join('');
+                const btnHtml = state.chatMessages.length === messages.length ? `<button onclick="updateState({page: 5}); setTimeout(initScratchCard, 100);" class="mt-6 px-8 py-3.5 bg-gradient-to-r from-pink-400 to-pink-500 text-white rounded-full text-xl font-bold shadow-lg shadow-pink-300 w-full animate-fade-up active:scale-95 transition-all">ไปดูกันคั้บ! ✨</button>` : '';
+                html = `<div class="flex flex-col w-full max-w-md min-h-[70vh] bg-white/60 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white m-4">
+                    <div class="flex items-center gap-4 mb-6 pb-4 border-b-2 border-pink-100">
+                        <div class="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center shadow-inner"><i data-lucide="user" class="text-pink-600"></i></div>
+                        <div>
+                            <h2 class="font-bold text-pink-700 text-xl">พี่เองงง 💕</h2>
+                            <p class="text-xs text-green-500 font-medium">● Online</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col flex-1 overflow-y-auto pb-4">${chatHtml}${state.chatMessages.length < messages.length ? `<div class="text-sm text-pink-400 font-medium animate-pulse ml-2 bg-white/50 w-fit px-3 py-1 rounded-full">กำลังพิมพ์...</div>` : ''}</div>
                     ${btnHtml}
                 </div>`;
+            
+            // ================== PAGE 5: Scratch Card ==================
             } else if (state.page === 5) {
-                html = `<div class="flex flex-col items-center justify-center space-y-6 animate-fade-in text-center px-4 w-full max-w-lg no-select">
-                    <h2 class="text-2xl font-semibold text-pink-600 mb-2">วันเกิดปีนี้ไปไหนดีน้า? 🤫</h2>
-                    <div class="relative w-full max-w-[300px] h-[200px] mx-auto bg-white rounded-2xl shadow-xl border-2 border-pink-200 flex flex-col items-center justify-center overflow-hidden">
-                        <div class="text-5xl mb-2">🍣</div>
-                        <h3 class="text-xl font-semibold text-pink-700">Shizen Machi Omakase</h3>
-                        <a href="https://share.google/xeeNcZXXYWj6aRFZG" target="_blank" class="text-pink-500 font-medium mt-2 underline flex items-center gap-1"><i data-lucide="map-pin" class="w-4 h-4"></i> เจอกัน 1 ทุ่มนะคั้บ!</a>
-                        <canvas id="scratch-canvas" width="300" height="200" class="rounded-2xl"></canvas>
+                html = `<div class="flex flex-col items-center justify-center space-y-6 animate-pop-in text-center px-4 w-full max-w-lg no-select">
+                    <h2 class="text-3xl font-bold text-pink-600 mb-4 drop-shadow-sm bg-white/60 px-6 py-2 rounded-full backdrop-blur-md">วันเกิดปีนี้ไปไหนดีน้า? 🤫</h2>
+                    
+                    <!-- บัตรขูด -->
+                    <div class="relative w-full max-w-[320px] h-[220px] mx-auto bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border-[3px] border-pink-300 flex flex-col items-center justify-center overflow-hidden animate-pulse-glow">
+                        <div class="text-6xl mb-3 drop-shadow-md">🍣</div>
+                        <h3 class="text-2xl font-bold text-pink-700 leading-tight">Shizen Machi<br>Omakase</h3>
+                        <a href="https://share.google/xeeNcZXXYWj6aRFZG" target="_blank" class="text-pink-500 font-bold mt-3 underline flex items-center gap-1 hover:text-pink-600 transition-colors bg-pink-50 px-3 py-1 rounded-full text-sm shadow-sm"><i data-lucide="map-pin" class="w-4 h-4"></i> เจอกัน 1 ทุ่มนะคั้บ!</a>
+                        
+                        <!-- Canvas สำหรับขูดทับอยู่ด้านบน -->
+                        <canvas id="scratch-canvas" width="320" height="220" class="rounded-xl"></canvas>
                     </div>
-                    <div id="next-btn-2" class="hidden mt-8 animate-fade-in w-full max-w-[300px]">
-                        <p class="text-pink-600 font-medium mb-4">เจอกันนะคั้บ เตรียมตัวให้พร้อม!</p>
-                        <p class="text-sm text-gray-500 bg-white p-3 rounded-xl border border-gray-200">ปล. รอติดตาม Part 2 เร็วๆ นี้นะคั้บ 🎁</p>
+                    
+                    <div id="next-btn-2" class="hidden mt-8 animate-fade-up w-full max-w-[320px]">
+                        <div class="bg-white/80 backdrop-blur-md p-5 rounded-2xl shadow-lg border border-pink-100">
+                            <p class="text-pink-600 font-bold text-lg mb-2">เจอกันนะคั้บ เตรียมตัวให้พร้อม!</p>
+                            <p class="text-sm text-gray-600 bg-gray-50/80 p-3 rounded-xl border border-gray-200 font-medium">ปล. รอติดตาม Part 2 เร็วๆ นี้นะคั้บ 🎁</p>
+                        </div>
                     </div>
                 </div>`;
             }
