@@ -45,7 +45,7 @@
         input[type=range].ribbon-slider::-webkit-slider-thumb:active { transform: scale(1.1); }
     </style>
 </head>
-<body class="min-h-screen bg-black flex justify-center items-center overflow-hidden relative">
+<body class="min-h-screen bg-black flex justify-center items-center overflow-x-hidden relative">
 
     <div id="app" class="w-full h-full flex justify-center items-center min-h-screen relative z-10"></div>
 
@@ -118,15 +118,13 @@
             const glow = document.getElementById('gift-glow');
             
             if (lid && bow && glow) {
-                // ให้โบว์ค่อยๆ จางและเล็กลงเมื่อเลื่อน 0 -> 40%
                 let bowOpacity = Math.max(1 - (val / 40), 0);
                 let bowScale = Math.max(1 - (val / 40), 0.5);
                 bow.style.opacity = bowOpacity;
                 bow.style.transform = `translateX(-50%) scale(${bowScale})`;
                 
-                // ให้ฝากล่องค่อยๆ แง้มเปิดและมีแสงเรืองแสงเมื่อเลื่อน 40 -> 100%
                 if (val > 40) {
-                    let lift = val - 40; // มีค่า 0 ถึง 60
+                    let lift = val - 40;
                     lid.style.transform = `translateX(-50%) translateY(-${lift * 0.7}px) rotate(-${lift * 0.15}deg)`;
                     glow.style.opacity = lift / 60;
                 } else {
@@ -140,15 +138,15 @@
 
         // --- Page 1: Shake ---
         function initShakeEvent() {
-            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
                 DeviceMotionEvent.requestPermission().then(p => { if(p==='granted') window.addEventListener('devicemotion', handleMotion); }).catch(console.error);
             } else window.addEventListener('devicemotion', handleMotion);
         }
         
         function updateShakeProgress() {
             const pb = document.getElementById('shake-progress');
-            if (pb) pb.style.width = Math.min((state.shakeCount / 8) * 100, 100) + '%';
-            if (state.shakeCount > 8) { 
+            if (pb) pb.style.width = Math.min((state.shakeCount / 24) * 100, 100) + '%';
+            if (state.shakeCount >= 24) { 
                 window.removeEventListener('devicemotion', handleMotion); 
                 setTimeout(() => updateState({ page: 2 }), 400); 
             }
@@ -252,20 +250,16 @@
                 html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-12 animate-fade-up text-center px-8 w-full no-select rounded-3xl m-2 shadow-2xl">
                     
                     <div class="relative w-40 h-40 mx-auto mt-4">
-                        <!-- แสงเรืองแสงตอนเปิด -->
                         <div id="gift-glow" class="absolute inset-0 bg-pink-400 blur-2xl rounded-full opacity-0 transition-opacity duration-100 pointer-events-none"></div>
                         
-                        <!-- ตัวกล่อง -->
                         <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-24 bg-pink-500 rounded-xl shadow-lg border-2 border-pink-600 overflow-hidden z-10">
                             <div class="absolute left-1/2 -translate-x-1/2 w-6 h-full bg-pink-300"></div>
                         </div>
                         
-                        <!-- ฝากล่อง -->
                         <div id="gift-lid" class="absolute bottom-20 left-1/2 -translate-x-1/2 w-36 h-10 bg-pink-400 rounded-lg shadow-md border-2 border-pink-600 z-20 origin-bottom-left transition-transform duration-75">
                             <div class="absolute left-1/2 -translate-x-1/2 w-6 h-full bg-pink-200"></div>
                         </div>
                         
-                        <!-- โบว์ -->
                         <div id="gift-bow" class="absolute bottom-24 left-1/2 -translate-x-1/2 text-6xl z-30 transition-all duration-75 origin-center">
                             🎀
                         </div>
@@ -277,7 +271,7 @@
                     </div>
                 </div>`;
             
-            // 1: เขย่าเพื่อเปิดกล่อง (มี Progress Bar + Effect)
+            // 1: เขย่าเพื่อเปิดกล่อง (เขย่า 24 ครั้ง)
             } else if (state.page === 1) {
                 html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-6 animate-pop-in text-center px-4 w-full no-select rounded-3xl m-2 shadow-2xl">
                     <h2 class="text-3xl font-semibold text-pink-600 drop-shadow-sm">แก้โบว์เสร็จแล้ว! 🎁</h2>
@@ -289,9 +283,9 @@
                     </div>
                     
                     <div class="w-64 h-4 bg-pink-200 rounded-full overflow-hidden mt-8 shadow-inner relative border border-pink-300/50">
-                        <div id="shake-progress" class="h-full bg-gradient-to-r from-pink-400 to-pink-600 transition-all duration-300" style="width: ${(state.shakeCount / 8) * 100}%"></div>
+                        <div id="shake-progress" class="h-full bg-gradient-to-r from-pink-400 to-pink-600 transition-all duration-300" style="width: ${(state.shakeCount / 24) * 100}%"></div>
                     </div>
-                    <p class="text-sm text-pink-400 font-medium">เขย่าให้หลอดเต็มเลย! หรือจิ้มรัวๆ ที่กล่องก็ได้คั้บ</p>
+                    <p class="text-sm text-pink-400 font-medium">เขย่าหรือจิ้มรัวๆ ให้ครบ <span class="font-bold text-pink-600">24 ครั้ง</span> ตามอายุเด่กกเลย! 🎂</p>
 
                     <button onclick="initShakeEvent()" class="mt-4 px-6 py-2 bg-pink-200/80 text-pink-700 rounded-full text-sm font-medium hover:bg-pink-300 transition">(กดเปิดระบบเซ็นเซอร์เขย่ามือถือ)</button>
                     <button onclick="forceOpenGift()" class="mt-2 text-sm text-gray-400 underline hover:text-pink-400 transition">ข้ามไปเปิดกล่องเลยคั้บ</button>
@@ -311,7 +305,7 @@
                     </div>
                 </div>`;
 
-            // 3: Suspense Countdown (ลูกเล่นบิ๊วอารมณ์ก่อนเปิดกล่อง)
+            // 3: Suspense Countdown
             } else if (state.page === 3) {
                 html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-8 animate-pop-in text-center px-4 w-full no-select rounded-3xl m-2 shadow-2xl">
                     <h2 class="text-3xl font-semibold text-pink-600 mb-2 drop-shadow-sm">ตอบถูกหมดเลย! เก่งมากคั้บ 👏</h2>
@@ -326,7 +320,7 @@
                     <div class="text-7xl font-bold text-pink-600 drop-shadow-xl transition-transform transform scale-125 mt-10" style="text-shadow: 0 4px 15px rgba(236,72,153,0.4);">${state.countdownText}</div>
                 </div>`;
 
-            // 4: เฉลยของขวัญ (Pop-in ทีละอัน)
+            // 4: เฉลยของขวัญ
             } else if (state.page === 4) {
                 html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen space-y-6 animate-pop-in text-center px-4 w-full rounded-3xl m-2 shadow-2xl">
                     <h2 class="text-3xl font-semibold text-pink-600 mb-4 drop-shadow-sm">รับของขวัญไปเลยยย 🎉</h2>
@@ -364,7 +358,7 @@
                     </div>
                 </div>`;
 
-            // 6: IG Story (มีป้าย Since + อนิเมชั่นตอนเปลี่ยนรูป)
+            // 6: IG Story
             } else if (state.page === 6) {
                 let barsHtml = storyData.map((_, idx) => `<div class="story-bar ${idx < state.storyIndex ? 'completed' : idx === state.storyIndex ? 'active' : ''}"><div class="story-bar-fill shadow-sm"></div></div>`).join('');
                 const currentImg = storyData[state.storyIndex];
@@ -374,7 +368,6 @@
                     </p>
                     <div class="story-container w-full h-[85vh]">
                         <div class="story-bars">${barsHtml}</div>
-                        <!-- key ใช้บังคับให้ภาพรีเฟรชอนิเมชั่น fade in ทุกครั้งที่เปลี่ยน -->
                         <img key="${state.storyIndex}" src="${currentImg.src}" class="story-image animate-fade-in" alt="Memory">
                         <div class="story-caption bg-black/40 p-4 rounded-2xl backdrop-blur-md border border-white/10 m-2">${currentImg.caption}</div>
                         <div class="story-nav-left" onclick="prevStory()"></div>
@@ -395,15 +388,17 @@
                     <p class="mt-5 text-pink-600 font-bold text-xl tracking-wider">${state.loadingProgress}%</p>
                 </div>`;
             
-            // 8: ขอเป็นแฟน (ปุ่มวิ่งหนี)
+            // 8: ขอเป็นแฟน (อัปเดตข้อความใหม่ + แก้บั๊กอีโมจิ)
             } else if (state.page === 8) {
                 html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen p-4 animate-pop-in no-select w-full rounded-3xl m-2 shadow-2xl">
                     <div class="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl text-center w-full max-w-sm border-2 border-pink-200 animate-pulse-glow">
                         <p class="text-pink-500 text-sm font-semibold mb-4 bg-pink-100 w-fit mx-auto px-4 py-1 rounded-full shadow-sm">19 Nov 2026 🗓️</p>
-                        <p class="text-lg text-gray-700 leading-relaxed mb-8 font-medium text-left indent-8">
-                            เรารู้จักกันมาจะครบ 3 เดือนแล้วนะพี่ว่าเราทำอะไรด้วยกันมาเยอะมากๆ...
+                        <p class="text-lg text-gray-700 leading-relaxed mb-8 font-medium text-left indent-6">
+                            เรารู้จักกันมาจะครบ 3 เดือนแล้วนะ พี่ว่าเราทำอะไรด้วยกันมาเยอะมากๆ และพี่ก็ยังอยากทำอะไรกับอลินต่อไปอีกเรื่อยๆ เลยคั้บ...
                         </p>
-                        <h2 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 mb-10 drop-shadow-sm" style="animation: pulse 2s infinite;">เป็นแฟนกับพี่ไหมคั้บ? 🥺</h2>
+                        <h2 class="text-3xl sm:text-4xl font-bold mb-10 drop-shadow-sm" style="animation: pulse 2s infinite;">
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">เป็นแฟนกับพี่ไหมคั้บ?</span> <span>🥺</span>
+                        </h2>
                         <div class="flex justify-center gap-4 relative h-16 items-center w-full">
                             <button onclick="updateState({page: 9}); fireConfetti(150);" class="px-8 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white font-bold rounded-full text-xl shadow-lg shadow-pink-500/40 z-10 hover:scale-105 active:scale-95 transition-all">เป็นแฟน! 💕</button>
                             <button onmouseover="moveNoButton(this)" ontouchstart="event.preventDefault(); moveNoButton(this)" class="px-6 py-3 bg-gray-300 text-gray-600 font-semibold rounded-full text-lg shadow-md z-10">ไม่เป็น!</button>
@@ -411,7 +406,7 @@
                     </div>
                 </div>`;
             
-            // 9: Success และเพิ่ม Day 1
+            // 9: Success และเพิ่ม Day 1 (แก้บั๊กอีโมจิด้วย)
             } else if (state.page === 9) {
                 html = `<div class="bg-gradient-custom flex flex-col items-center justify-center min-h-screen text-center px-4 relative animate-fade-in w-full rounded-3xl m-2 shadow-2xl overflow-hidden">
                     <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIyIiBmaWxsPSIjZWM0ODk5IiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8L3N2Zz4=')] opacity-50 z-0"></div>
@@ -421,7 +416,9 @@
                         <div class="absolute bottom-0 left-0 w-40 h-40 bg-orange-300 rounded-full blur-3xl opacity-30 -ml-20 -mb-20"></div>
                         
                         <i data-lucide="heart" class="w-28 h-28 text-pink-500 mx-auto mb-6 animate-pulse drop-shadow-xl" fill="#ec4899"></i>
-                        <h1 class="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 mb-4 drop-shadow-sm">เย้! 🎉</h1>
+                        <h1 class="text-5xl sm:text-6xl font-bold mb-4 drop-shadow-sm">
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400">เย้!</span> <span>🎉</span>
+                        </h1>
                         <h2 class="text-3xl font-semibold text-gray-800 mb-2">รักลินนะคั้บ 💕</h2>
                         <p class="text-pink-500 mt-4 text-xl font-medium">เป็นแฟนกันแล้วน้าาา 🥰</p>
                         
